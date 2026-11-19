@@ -1,0 +1,2768 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Công Cụ Lập Báo Cáo & Đối Soát Hóa Chất Kiểm Soát Đặc Biệt - V10.5</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <style>
+    :root {
+      --navy: #16325c;
+      --blue: #2563eb;
+      --green: #1e7e34;
+      --green-bg: #f0fff4;
+      --green-border: #9ae6b4;
+      --amber: #975a16;
+      --amber-bg: #fffff0;
+      --amber-border: #f6e05e;
+      --red: #9b2c2c;
+      --red-bg: #fff5f5;
+      --red-border: #feb2b2;
+      --bg: #eef2f6;
+      --card: #ffffff;
+      --border: #d1d9e6;
+      --text: #1e293b;
+      --muted: #475569;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+    html, body {
+      margin: 0; padding: 0; background: var(--bg); color: var(--text);
+      min-height: 100%; overflow-y: auto; overflow-x: hidden;
+    }
+    header {
+      background: var(--navy); color: #fff; padding: 14px 28px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    header h1 { margin: 0; font-size: 17.5px; letter-spacing: 0.2px; text-transform: uppercase; }
+    header p { margin: 3px 0 0; font-size: 12.5px; opacity: 0.9; }
+    .container { max-width: 1420px; margin: 20px auto; padding: 0 22px 60px; }
+
+    .top-grid {
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 18px; margin-bottom: 18px;
+    }
+    @media (max-width: 1060px) { .top-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      margin-bottom: 18px;
+    }
+    .top-grid .card { margin-bottom: 0; }
+    .card-title {
+      margin: 0 0 13px; font-size: 15px; font-weight: 700; color: var(--navy);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 5px;
+    }
+    .file-box {
+      position: relative; border: 1.5px dashed #94a3b8; border-radius: 6px;
+      padding: 8px 10px; background: #f8fafc; transition: all 0.15s;
+    }
+    .file-box.sales-box { border-color: #3b82f6; background: #f0f7ff; }
+    .file-box:hover { border-color: var(--blue); background: #eff6ff; }
+    .file-row-flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .file-box input[type="file"] { flex: 1; min-width: 210px; font-size: 12.5px; cursor: pointer; }
+
+    .chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+    .file-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #e0edff; color: #1e3a8a; border: 1px solid #bfdbfe;
+      padding: 3px 8px; border-radius: 5px; font-size: 11.5px; font-weight: 600;
+    }
+    .file-chip.inv-chip { background: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
+    .file-chip button {
+      background: none; border: none; color: #dc2626; font-weight: 700; cursor: pointer; padding: 0 2px;
+    }
+
+    .sku-params-row {
+      display: grid; grid-template-columns: 1.45fr 1.15fr 0.6fr 0.72fr 0.85fr; gap: 9px; margin-bottom: 13px;
+    }
+    @media (max-width: 900px) { .sku-params-row { grid-template-columns: 1fr 1fr; } }
+
+    input[type="text"], input[type="number"], input[type="date"], select {
+      width: 100%; padding: 6.5px 9px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 13px; background: #fff; color: var(--text);
+    }
+    input:focus, select:focus { outline: none; border-color: var(--blue); }
+
+    .action-row {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 6px;
+    }
+    .btn {
+      background: var(--navy); color: #fff; border: none; padding: 9px 16px;
+      border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { background: var(--blue); }
+    .btn-green { background: #1e7e34; font-size: 13.5px; padding: 10px 18px; }
+    .btn-green:hover { background: #166534; }
+    .btn-green:disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn-outline {
+      background: #fff; color: var(--navy); border: 1px solid var(--border);
+      padding: 6px 11px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 600;
+    }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-danger-outline {
+      background: #fff5f5; color: #c53030; border: 1px solid #feb2b2;
+      padding: 6px 11px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 600;
+    }
+    .btn-danger-outline:hover { background: #fed7d7; }
+    .btn-sm-add {
+      background: #eff6ff; color: var(--blue); border: 1px solid #bfdbfe;
+      padding: 5px 10px; font-size: 12px; border-radius: 5px; cursor: pointer; font-weight: 600;
+    }
+    .btn-sm-add:hover { background: #dbeafe; }
+
+    .chk-label {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
+      color: var(--muted); cursor: pointer; user-select: none;
+    }
+
+    /* BẢNG QUẢN LÝ GPNK FIFO */
+    .gpnk-quick-bar {
+      display: grid; grid-template-columns: 1.45fr 1fr; gap: 8px; align-items: center; margin-bottom: 8px;
+      background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 7px; padding: 7px 10px;
+    }
+    @media (max-width: 760px) { .gpnk-quick-bar { grid-template-columns: 1fr; } }
+    .gpnk-quick-bar label {
+      display: block; font-size: 11px; font-weight: 700; color: #1e3a8a; margin-bottom: 2px;
+    }
+    .gpnk-quick-bar select, .gpnk-quick-bar input {
+      padding: 4.5px 8px; font-size: 12.5px; border-color: #93c5fd;
+    }
+    .gpnk-add-grid {
+      display: grid; grid-template-columns: 1.35fr 1.35fr 0.9fr 0.85fr auto; gap: 8px;
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px;
+      align-items: end;
+    }
+    @media (max-width: 900px) { .gpnk-add-grid { grid-template-columns: 1fr 1fr; } }
+    .gpnk-add-grid label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+    .gpnk-mini-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .gpnk-mini-table th {
+      background: #f1f5f9; color: var(--navy); padding: 7px 8px; text-align: left;
+      border-bottom: 1px solid var(--border); font-weight: 700; white-space: nowrap;
+      position: sticky; top: 0; z-index: 2;
+    }
+    .gpnk-mini-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px;
+    }
+    @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    .kpi-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 13px 16px; border-left: 4px solid var(--navy);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .kpi-card .k-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .kpi-card .k-val { font-size: 20px; font-weight: 700; color: var(--navy); margin: 4px 0; }
+    .kpi-card .k-sub { font-size: 11.5px; color: var(--muted); }
+
+    .recon-banner {
+      border-radius: 8px; padding: 12px 15px; margin-bottom: 16px;
+      border: 1px solid var(--green-border); background: var(--green-bg);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+      font-size: 13px;
+    }
+    .recon-banner.warn {
+      border-color: var(--amber-border); background: var(--amber-bg); color: var(--amber);
+    }
+    .recon-banner.error {
+      border-color: var(--red-border); background: var(--red-bg); color: var(--red);
+    }
+    .recon-banner .status-txt { font-weight: 600; color: var(--green); line-height: 1.5; }
+    .recon-banner.warn .status-txt { color: var(--amber); }
+    .recon-banner.error .status-txt { color: var(--red); }
+
+    .table-scroll {
+      width: 100%; max-height: 440px; overflow-x: auto; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff;
+    }
+    table.main-tbl { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px; }
+    table.main-tbl thead th {
+      position: sticky; top: 0; z-index: 3;
+      background: var(--navy); color: #fff; padding: 10px 12px; text-align: left;
+      white-space: nowrap; font-weight: 600;
+    }
+    table.main-tbl td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+    table.main-tbl tr:nth-child(even) td { background: #f8fafc; }
+    table.main-tbl tr:hover td { background: #eff6ff; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .center { text-align: center; }
+
+    .audit-drawer {
+      display: none; margin-bottom: 16px; border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; background: #fafcff;
+    }
+    .audit-drawer.open { display: block; }
+    .audit-tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted);
+    }
+    .tab-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    .tag-ok { background: #c6f6d5; color: #22543d; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+    .tag-other { background: #e0f2fe; color: #075985; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+    .tag-warn { background: #fefcbf; color: #744210; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+    .tag-skip { background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+
+    /* MODAL */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+      z-index: 100; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 10px; max-width: 1140px; width: 100%;
+      max-height: 92vh; overflow-y: auto; padding: 20px 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+    .modal-form-card {
+      background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 14px;
+    }
+    .modal-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: 10px; margin-bottom: 12px;
+    }
+    .modal-grid label { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+    .chem-box {
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 7px; padding: 10px 12px; margin-bottom: 12px;
+    }
+    .chem-box-head {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+      font-size: 12px; font-weight: 700; color: var(--navy);
+    }
+    .chem-row {
+      display: grid; grid-template-columns: 1.6fr 1fr 0.9fr 36px; gap: 8px; margin-bottom: 7px; align-items: center;
+    }
+    .btn-del-chem {
+      background: #fff5f5; color: #c53030; border: 1px solid #feb2b2;
+      border-radius: 5px; height: 32px; cursor: pointer; font-weight: 700;
+    }
+    .gp-item-badge-exist {
+      display: inline-block; background: #dcfce7; color: #166534; font-size: 10.5px; font-weight: 700;
+      padding: 1px 6px; border-radius: 4px; margin-top: 3px;
+    }
+    .gp-item-badge-new {
+      display: inline-block; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 700;
+      padding: 1px 6px; border-radius: 4px; margin-top: 3px;
+    }
+  </style>
+
+<script src="../assets/companies-data.js"></script>
+<script src="../assets/tool-bridge.js"></script>
+<script>
+(function () {
+  const comp = window.WorkspaceCompany;
+  if (!comp) return;
+  const origGet = Storage.prototype.getItem;
+  const origSet = Storage.prototype.setItem;
+  Storage.prototype.getItem = function (k) { return origGet.call(this, k === "NGLM_SKU_CATALOG_V8" ? `${comp.storagePrefix}_SKU_CATALOG_V8` : k); };
+  Storage.prototype.setItem = function (k, v) { return origSet.call(this, k === "NGLM_SKU_CATALOG_V8" ? `${comp.storagePrefix}_SKU_CATALOG_V8` : k, v); };
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const subHeader = document.querySelector("header p");
+    if (subHeader) subHeader.textContent = `${comp.fullName} • ${comp.warehouse.split("-")[0].trim()}`;
+    document.querySelectorAll('input[value="Kho Vietchem"]').forEach(inp => { inp.value = comp.warehouse.split("-")[0].trim(); });
+
+    if (window.ExcelJS && ExcelJS.Workbook && comp.id !== "nguyen-gia") {
+      const origAddWs = ExcelJS.Workbook.prototype.addWorksheet;
+      ExcelJS.Workbook.prototype.addWorksheet = function (...args) {
+        const ws = origAddWs.apply(this, args);
+        const origGetCell = ws.getCell.bind(ws);
+        ws.getCell = function (...cArgs) {
+          const cell = origGetCell(...cArgs);
+          const desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(cell), "value");
+          if (desc && desc.set && !cell._patchedComp) {
+            cell._patchedComp = true;
+            Object.defineProperty(cell, "value", {
+              get: () => desc.get.call(cell),
+              set: (v) => {
+                if (typeof v === "string") {
+                  v = v
+                    .replace(/CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI NGUYỄN GIA LIÊN MINH/g, comp.fullName)
+                    .replace(/0317110114/g, comp.mst)
+                    .replace(/84\/7 Tân Sơn Nhì, Phường Tân Sơn Nhì, Thành Phố Hồ Chí Minh, Việt Nam\./g, comp.address)
+                    .replace(/Kho Vietchem - Một phần Lô H9A-H10, Đường N3, KCN Nam Thuận, Xã Mỹ Hạnh, Tỉnh Tây Ninh, Việt Nam\./g, comp.warehouse)
+                    .replace(/ĐẶNG NGỌC DỊ THẢO/g, comp.signer);
+                }
+                desc.set.call(cell, v);
+              }
+            });
+          }
+          return cell;
+        };
+        return ws;
+      };
+    }
+  });
+})();
+</script>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>CÔNG CỤ LẬP BÁO CÁO &amp; ĐỐI SOÁT HÓA CHẤT KIỂM SOÁT ĐẶC BIỆT</h1>
+    <p>CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI NGUYỄN GIA LIÊN MINH • Kho Vietchem</p>
+  </div>
+  <button id="exportBtn" class="btn btn-green" onclick="downloadOfficialExcel()" disabled>
+    ⬇ Xuất File Excel Báo Cáo (Khổ A4 Ngang)
+  </button>
+</header>
+
+<div class="container">
+  <div class="top-grid">
+    <!-- CỘT 1: CHỌN MÃ HÀNG + KỲ THÁNG + NĂM BÁO CÁO + NẠP FILE -->
+    <div class="card">
+      <div class="card-title">
+        <span>1. Chọn mã hàng, Kỳ báo cáo &amp; Nạp Sổ Bán Hàng + Sổ Vật Tư</span>
+        <button type="button" class="btn-outline" onclick="openSkuModal()">+ Thêm / Xóa / Quản lý mã hàng</button>
+      </div>
+
+      <div class="sku-params-row">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Mã sản phẩm báo cáo:</label>
+          <select id="skuSelect" onchange="onSkuChanged()"></select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--blue);display:block;margin-bottom:4px;">Chốt kỳ đối soát:</label>
+          <select id="monthSelect" onchange="onMonthChanged()">
+            <option value="ALL">Tất cả kỳ trong file</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Năm BC:</label>
+          <input type="number" id="inpReportYear" value="2026" min="2024" max="2035" oninput="recalcFromInputs()" />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Quy cách (kg):</label>
+          <input type="number" id="inpFactor" step="0.01" oninput="recalcFromInputs()" />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Quy mô năm (kg):</label>
+          <input type="number" id="inpQuota" step="1" oninput="recalcFromInputs()" />
+        </div>
+      </div>
+
+      <!-- BƯỚC 1A: NẠP SỔ CHI TIẾT BÁN HÀNG -->
+      <div class="form-group">
+        <label>A. File Sổ chi tiết bán hàng (.xlsx — nạp file tháng, quý hoặc 6 tháng):</label>
+        <div class="file-box sales-box">
+          <div class="file-row-flex">
+            <input type="file" id="salesInput" accept=".xlsx,.xls" multiple onchange="addSalesFiles(this.files); this.value='';" />
+            <button type="button" class="btn-outline" onclick="document.getElementById('salesInput').click()">+ Nạp thêm file</button>
+            <button type="button" class="btn-outline" style="color:var(--red)" onclick="clearSalesFiles()">Xóa hết</button>
+          </div>
+          <div class="chip-list" id="salesChips"></div>
+        </div>
+      </div>
+
+      <!-- BƯỚC 1B: NẠP SỔ CHI TIẾT VẬT TƯ HÀNG HÓA -->
+      <div class="form-group">
+        <label>B. File Sổ chi tiết vật tư hàng hóa (.xlsx — tự lấy tồn đầu kỳ / nhập / xuất đúng giai đoạn):</label>
+        <div class="file-box">
+          <div class="file-row-flex">
+            <input type="file" id="ledgerInput" accept=".xlsx,.xls" multiple onchange="addLedgerFiles(this.files); this.value='';" />
+            <button type="button" class="btn-outline" onclick="document.getElementById('ledgerInput').click()">+ Thêm file VT</button>
+            <button type="button" class="btn-outline" style="color:var(--red)" onclick="clearLedgerFiles()">Xóa hết</button>
+          </div>
+          <div class="chip-list" id="ledgerChips"></div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn" onclick="runReconciliation()">⚙ Chạy Tổng Hợp &amp; Phân Bổ FIFO</button>
+        <label class="chk-label" title="Mặc định đơn xuất hỗ trợ/đổi lỗi không hóa đơn chỉ trừ vào tồn kho và ghi chú ở cột Ghi chú">
+          <input type="checkbox" id="chkIncludeOtherOutInReport" onchange="recalcFromInputs()" />
+          Đưa cả đơn xuất hỗ trợ / đổi lỗi vào bảng Bán ra
+        </label>
+      </div>
+    </div>
+
+    <!-- CỘT 2: QUẢN LÝ NHIỀU GIẤY PHÉP NHẬP KHẨU (GPNK) & PHÂN BỔ FIFO -->
+    <div class="card">
+      <div class="card-title">
+        <span>2. Sổ theo dõi Giấy phép nhập khẩu (GPNK) — FIFO</span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn-sm-add" style="background:#16325c;color:#fff;border-color:#16325c;" onclick="openPermitMasterModal()">📋 Nhập trọn bộ 1 GPNK (Nhiều mã)</button>
+          <span id="syncImportBadge"></span>
+        </div>
+      </div>
+
+      <!-- THANH CHỌN NHANH GPNK & TỒN ĐẦU KỲ TRƯỚC GPNK -->
+      <div class="gpnk-quick-bar">
+        <div>
+          <label>⚡ Chọn nhanh GPNK đã lưu:</label>
+          <select id="sharedGpnkSelect" onchange="applySharedGpnkPreset(this.value)">
+            <option value="">-- Chọn GPNK &amp; TKHQ đã khai báo --</option>
+          </select>
+        </div>
+        <div>
+          <label title="Dùng khi chỉ nạp Sổ Bán Hàng (chưa nạp Sổ Vật Tư) cho giai đoạn tồn kho trước khi cấp GPNK mới">📦 Tồn đầu kỳ tay (kg — nếu chưa nạp Sổ VT):</label>
+          <input type="number" id="inpManualOpenKg" step="0.01" placeholder="Tự lấy từ Sổ VT nếu có" oninput="recalcFromInputs()" />
+        </div>
+      </div>
+
+      <div class="gpnk-add-grid">
+        <div>
+          <label>Số &amp; ngày GPNK:</label>
+          <input type="text" id="newGpnkNo" list="gpnkDatalist" placeholder="VD: 5482/GP-SCT ngày 08/10/2026" oninput="onGpnkInputTyped(this.value)" />
+          <datalist id="gpnkDatalist"></datalist>
+        </div>
+        <div>
+          <label>Số &amp; ngày TKHQ:</label>
+          <input type="text" id="newTkhqNo" list="tkhqDatalist" placeholder="VD: 108704583630 (ngày 09/10/2026)" />
+          <datalist id="tkhqDatalist"></datalist>
+        </div>
+        <div>
+          <label>Ngày nhập kho:</label>
+          <input type="date" id="newImpDate" />
+        </div>
+        <div>
+          <label>KL nhập (kg):</label>
+          <input type="number" id="newImpKg" step="0.01" placeholder="VD: 4326" />
+        </div>
+        <div>
+          <button type="button" class="btn-sm-add" style="height:33px;" onclick="addGpnkBatch()">+ Thêm lô</button>
+        </div>
+      </div>
+
+      <div style="max-height:175px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;">
+        <table class="gpnk-mini-table">
+          <thead>
+            <tr>
+              <th>Thứ tự</th>
+              <th>Số GPNK &amp; TKHQ</th>
+              <th>Ngày nhập</th>
+              <th class="num">KL lô (kg)</th>
+              <th class="num">Tồn đầu kỳ</th>
+              <th class="num">Tồn cuối kỳ</th>
+              <th class="center">Sửa / Xóa</th>
+            </tr>
+          </thead>
+          <tbody id="gpnkBatchTableBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted);">
+        <span>Chỉ áp dụng các GPNK có ngày nhập ≤ ngày cuối kỳ báo cáo.</span>
+        <label class="chk-label">
+          <input type="checkbox" id="chkShowZeroBatches" onchange="recalcFromInputs()" />
+          Hiện cả GPNK ngoài kỳ / đã hết (0 kg)
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 THẺ KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="k-title">TỒN ĐẦU KỲ</div>
+      <div class="k-val" id="kpiOpenKg">0,00 kg</div>
+      <div class="k-sub" id="kpiOpenUnit">0 ĐVT</div>
+    </div>
+    <div class="kpi-card">
+      <div class="k-title">NHẬP KHẨU TRONG KỲ</div>
+      <div class="k-val" id="kpiImpKg">0,00 kg</div>
+      <div class="k-sub" id="kpiImpUnit">0 ĐVT</div>
+    </div>
+    <div class="kpi-card">
+      <div class="k-title">XUẤT BÁN THUẦN (CÓ HĐ)</div>
+      <div class="k-val" id="kpiExpKg">0,00 kg</div>
+      <div class="k-sub" id="kpiExpUnit">0 ĐVT</div>
+    </div>
+    <div class="kpi-card">
+      <div class="k-title">TỒN TRỮ CUỐI KỲ</div>
+      <div class="k-val" id="kpiCloseKg">0,00 kg</div>
+      <div class="k-sub" id="kpiCloseUnit">0 ĐVT</div>
+    </div>
+    <div class="kpi-card">
+      <div class="k-title">HẠN MỨC NĂM CÒN LẠI</div>
+      <div class="k-val" id="kpiRemQuota">0,00 kg</div>
+      <div class="k-sub" id="kpiQuotaNote">Chưa nạp dữ liệu</div>
+    </div>
+  </div>
+
+  <!-- THANH ĐỐI SOÁT CHÉO 2 CHIỀU -->
+  <div id="reconBanner" class="recon-banner" style="display:none;">
+    <div class="status-txt" id="reconStatusText"></div>
+    <button type="button" class="btn-outline" onclick="toggleAuditDrawer()">🔍 Soi bảng đối soát chéo &amp; chi tiết phân bổ GPNK</button>
+  </div>
+
+  <!-- NGĂN SOI CHI TIẾT ĐỐI SOÁT CHÉO -->
+  <div id="auditDrawer" class="audit-drawer">
+    <div class="audit-tabs">
+      <button type="button" class="tab-btn active" id="tabCrossBtn" onclick="switchAuditTab('cross')">1. Đối soát chéo Hóa đơn &amp; Phiếu trả lại / Xuất khác (Bán hàng ↔ Vật tư)</button>
+      <button type="button" class="tab-btn" id="tabLedgerBtn" onclick="switchAuditTab('ledger')">2. Toàn bộ dòng Sổ Vật Tư của mã này</button>
+    </div>
+
+    <div id="crossTableWrap" class="table-scroll" style="max-height:330px;">
+      <table class="main-tbl">
+        <thead>
+          <tr>
+            <th class="center">Số HĐ / Số CT</th>
+            <th class="center">Ngày</th>
+            <th>Khách hàng / Diễn giải</th>
+            <th class="num">SL Sổ Bán Hàng</th>
+            <th class="num">SL Xuất Sổ Vật Tư</th>
+            <th class="num">Chênh lệch</th>
+            <th class="center">Kết quả đối soát</th>
+          </tr>
+        </thead>
+        <tbody id="crossTableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="ledgerTableWrap" class="table-scroll" style="max-height:330px;display:none;">
+      <table class="main-tbl">
+        <thead>
+          <tr>
+            <th class="center">Dòng Excel</th>
+            <th class="center">Ngày</th>
+            <th>Kho</th>
+            <th>Số CT / HĐ</th>
+            <th>Diễn giải / Đối tượng</th>
+            <th class="num">Nhập</th>
+            <th class="num">Xuất</th>
+            <th class="num">Tồn Sổ KT</th>
+            <th class="center">Phân loại</th>
+          </tr>
+        </thead>
+        <tbody id="auditTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BẢNG TỔNG HỢP KHÁCH HÀNG PHÂN BỔ THEO GPNK -->
+  <div class="card" style="margin-bottom:0;">
+    <div class="card-title">
+      <span>3. Bảng kê xuất bán phân bổ theo Giấy phép nhập khẩu (Đưa lên Báo cáo Sở Công Thương)</span>
+      <span style="font-size:12px;font-weight:600;color:var(--muted);" id="periodBadge"></span>
+    </div>
+
+    <div class="table-scroll">
+      <table class="main-tbl">
+        <thead>
+          <tr>
+            <th style="width:48px" class="center">STT</th>
+            <th style="width:205px">Thuộc lô GPNK / Tồn kho</th>
+            <th style="min-width:250px">Tên khách hàng / Đối tượng</th>
+            <th style="width:145px" class="center">MST</th>
+            <th style="width:185px">Số hóa đơn / Chứng từ</th>
+            <th style="width:85px" class="num">SL (ĐVT)</th>
+            <th style="width:115px" class="num">Khối lượng (kg)</th>
+            <th style="width:225px">Mục đích sử dụng</th>
+          </tr>
+        </thead>
+        <tbody id="buyerTableBody">
+          <tr><td colspan="8" class="center" style="padding:26px;color:var(--muted);">Chọn mã hàng, chọn kỳ báo cáo và nạp file Sổ bán hàng / Sổ vật tư ở mục 1.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NHẬP TRỌN BỘ 1 GIẤY PHÉP NHẬP KHẨU (NHIỀU MÃ HÀNG CÙNG LÚC) -->
+<div id="permitMasterModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);">📋 Khai báo trọn bộ 1 Giấy phép nhập khẩu (GPNK gồm nhiều mã hàng)</h3>
+      <button type="button" class="btn-outline" onclick="closePermitMasterModal()">✕ Đóng</button>
+    </div>
+
+    <div class="modal-form-card">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:700;color:#1e3a8a;">Mở GPNK đã lưu để xem / bổ sung mã:</span>
+        <select id="permitHistorySelect" style="max-width:460px;" onchange="loadExistingPermitIntoMasterModal(this.value)">
+          <option value="">-- Nhập tờ Giấy phép nhập khẩu mới --</option>
+        </select>
+      </div>
+
+      <div class="modal-grid" style="grid-template-columns: 1.25fr 1.35fr 0.85fr;">
+        <div>
+          <label>Số &amp; ngày GPNK (chung cho cả tờ phép):</label>
+          <input type="text" id="pmGpnkNo" placeholder="VD: 1127/GP-UBND ngày 30/06/2026" />
+        </div>
+        <div>
+          <label>Số &amp; ngày TKHQ (chung hoặc mặc định):</label>
+          <input type="text" id="pmTkhqNo" placeholder="VD: 108487347510 (ngày tờ khai 31/07/2026)" />
+        </div>
+        <div>
+          <label>Ngày nhập kho mặc định:</label>
+          <input type="date" id="pmDefaultDate" onchange="syncDefaultDateToPermitRows(this.value)" />
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:12px;color:var(--muted);">
+          Chỉ những dòng được <strong>tick chọn (✓)</strong> ở cột đầu tiên mới được lưu vào danh mục và GPNK:
+        </span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn-sm-add" onclick="scanLedgerImportsIntoPermitModal()">🔍 Quét các mã nhập từ Sổ Vật Tư đã nạp</button>
+          <button type="button" class="btn-sm-add" style="background:#dcfce7;color:#166534;border-color:#86efac;" onclick="addPermitItemRow()">+ Thêm dòng mã hàng</button>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="allSkusDatalist"></datalist>
+
+    <div class="table-scroll" style="max-height:370px;margin-bottom:14px;">
+      <table class="main-tbl" style="min-width:1070px;">
+        <thead>
+          <tr>
+            <th style="width:42px" class="center">Lưu</th>
+            <th style="width:125px">Mã hàng *</th>
+            <th style="width:205px">Tên thương mại</th>
+            <th style="width:165px">Hóa chất KSĐB</th>
+            <th style="width:105px">Mã CAS</th>
+            <th style="width:95px">Hàm lượng %</th>
+            <th style="width:75px" class="num">Q.Cách</th>
+            <th style="width:90px" class="num">Q.Mô/năm</th>
+            <th style="width:125px">Ngày nhập</th>
+            <th style="width:105px" class="num">KL nhập (kg) *</th>
+            <th style="width:42px" class="center">Xóa</th>
+          </tr>
+        </thead>
+        <tbody id="permitItemsTableBody"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <span id="permitTotalKgPreview" style="font-size:13px;font-weight:700;color:var(--navy);">Tổng khối lượng trên GP: 0,00 kg (0 mã hàng được chọn)</span>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn-outline" onclick="closePermitMasterModal()">Hủy</button>
+        <button type="button" class="btn btn-green" onclick="savePermitMasterBundle()">💾 Lưu các mã đã tick chọn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QUẢN LÝ DANH MỤC MÃ HÀNG -->
+<div id="skuModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <h3 style="margin:0;color:var(--navy);">Danh mục Mã hàng Hóa chất KSĐB (Tự động lưu trên trình duyệt)</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn-outline" onclick="resetCatalogToDefault()" title="Khôi phục 4 mã gốc ban đầu">↺ Khôi phục gốc</button>
+        <button type="button" class="btn-outline" onclick="exportCatalogBackup()">⬇ Sao lưu danh mục &amp; GPNK</button>
+        <button type="button" class="btn-outline" onclick="document.getElementById('importBackupInput').click()">⬆ Nạp sao lưu</button>
+        <input type="file" id="importBackupInput" accept=".json" style="display:none" onchange="importCatalogBackup(this.files); this.value='';" />
+        <button type="button" class="btn-outline" onclick="closeSkuModal()">✕ Đóng</button>
+      </div>
+    </div>
+
+    <div class="modal-form-card">
+      <div class="modal-grid">
+        <div>
+          <label>Mã nhận diện trên sổ KT (VD: 1050, A656...):</label>
+          <input type="text" id="mSku" placeholder="VD: P549-060" />
+        </div>
+        <div>
+          <label>Tên thương mại trên báo cáo:</label>
+          <input type="text" id="mTradeName" placeholder="Tên sản phẩm tiếng Anh" />
+        </div>
+        <div>
+          <label>Nhóm báo cáo:</label>
+          <select id="mGroup">
+            <option value="NHÓM 1">NHÓM 1</option>
+            <option value="NHÓM 2 (TCCN)">NHÓM 2 (TCCN)</option>
+          </select>
+        </div>
+        <div>
+          <label>Quy cách (kg / ĐVT):</label>
+          <input type="number" id="mFactor" step="0.01" value="1" />
+        </div>
+        <div>
+          <label>Quy mô cấp phép (kg/năm):</label>
+          <input type="number" id="mQuota" step="1" value="5000" />
+        </div>
+        <div>
+          <label>Kho lưu trữ:</label>
+          <input type="text" value="Kho Vietchem" readonly style="background:#edf2f7;color:#334155;font-weight:600;" />
+        </div>
+      </div>
+
+      <div class="chem-box">
+        <div class="chem-box-head">
+          <span>Thành phần hóa chất cần KSĐB có trong sản phẩm (Thêm nhiều dòng nếu sản phẩm chứa từ 2 chất trở lên):</span>
+          <button type="button" class="btn-sm-add" onclick="addChemRow()">+ Thêm chất</button>
+        </div>
+        <div id="chemRowsContainer"></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="btn-danger-outline" id="btnDeleteEditingSku" style="display:none;" onclick="deleteEditingSkuFromForm()">🗑 Xóa mã hàng này</button>
+        <button type="button" class="btn-outline" onclick="resetModalForm()">↺ Nhập mã mới</button>
+        <button type="button" class="btn" onclick="saveCustomSku()">💾 Lưu mã hàng này</button>
+      </div>
+    </div>
+
+    <div class="table-scroll" style="max-height:280px;">
+      <table class="main-tbl">
+        <thead>
+          <tr>
+            <th>Mã hàng</th>
+            <th>Tên thương mại</th>
+            <th>Thành phần Hóa chất (CAS | Hàm lượng)</th>
+            <th class="center">Nhóm</th>
+            <th class="num">Quy cách</th>
+            <th class="num">Quy mô/năm</th>
+            <th class="center" style="width:125px;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="skuCatalogTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const WAREHOUSE_OFFICIAL_LINE = "Kho Vietchem - Một phần Lô H9A-H10, Đường N3, KCN Nam Thuận, Xã Mỹ Hạnh, Tỉnh Tây Ninh, Việt Nam.";
+
+const DEFAULT_SKU_CATALOG = {
+  "1050": {
+    sku: "1050",
+    label: "1050 (General Purpose Stopper - 2.06kg)",
+    tradeName: "GENERAL PURPOSE STOPPER (2K+0.06K)",
+    chemName: "Vinyl benzene",
+    cas: "100-42-5",
+    pct: "≥10-≤24",
+    groupTitle: "NHÓM 1",
+    gpkd: "312/GCNĐĐK-SCT",
+    quota: 20000,
+    factor: 2.06,
+    batches: [
+      { id: "b1050_1", gpnk: "1127/GP-UBND ngày 30/06/2026", tkhq: "108487347510 (ngày tờ khai 31/07/2026)", importDate: "2026-07-31", importKg: 6180 },
+      { id: "b1050_2", gpnk: "5482/GP-SCT ngày 08/10/2026", tkhq: "108704583630 (ngày tờ khai 09/10/2026)", importDate: "2026-10-12", importKg: 4326 }
+    ]
+  },
+  "A656": {
+    sku: "A656",
+    label: "A656 (Galvaplast 77 - 1.5kg)",
+    tradeName: "GALVAPLAST 77",
+    chemName: "Vinyl benzene",
+    cas: "100-42-5",
+    pct: "10-<20",
+    groupTitle: "NHÓM 1",
+    gpkd: "312/GCNĐĐK-SCT",
+    quota: 2000,
+    factor: 1.50,
+    batches: [
+      { id: "ba656_1", gpnk: "1127/GP-UBND ngày 30/06/2026", tkhq: "108487347510 (ngày tờ khai 31/07/2026)", importDate: "2026-07-31", importKg: 1500 }
+    ]
+  },
+  "D820": {
+    sku: "D820",
+    label: "D820 (Plastics Adhesion Promoter - 1kg)",
+    tradeName: "D820 PLASTICS ADHESION PROMOTER",
+    chemName: "Etyl benzen",
+    cas: "100-41-4",
+    pct: "50-100",
+    groupTitle: "NHÓM 1",
+    gpkd: "312/GCNĐĐK-SCT",
+    quota: 2000,
+    factor: 1.00,
+    batches: [
+      { id: "bd820_1", gpnk: "2769/GP-SCT ngày 29/07/2026", tkhq: "108526495010 (ngày tờ khai 14/08/2026)", importDate: "2026-08-14", importKg: 1000 }
+    ]
+  },
+  "BP400PH": {
+    sku: "BP400PH",
+    label: "BP400PH (Belco Plus Primer Hardener - 1kg)",
+    tradeName: "BELCO PLUS PRIMER HARDENER (BP400PH/1L)",
+    chemName: "Etyl benzen\nToluene",
+    cas: "100-41-4\n108-88-3",
+    pct: "≤2,4\n25-50",
+    groupTitle: "NHÓM 1",
+    gpkd: "312/GCNĐĐK-SCT",
+    quota: 5000,
+    factor: 1.00,
+    batches: [
+      { id: "bbp400_1", gpnk: "1127/GP-UBND ngày 30/06/2026", tkhq: "108487347510 (ngày tờ khai 31/07/2026)", importDate: "2026-07-31", importKg: 500 }
+    ]
+  }
+};
+
+const RAW_CUSTOMER_DB = {
+  "CÔNG TY TNHH Ô TÔ TIẾN THU": { mst: "4001147080", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY CỔ PHẦN Ô TÔ VẬN HỘI MỚI": { mst: "0400561176", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY CỔ PHẦN CƠ KHÍ - XÂY DỰNG GIAO THÔNG": { mst: "0300477989", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY CỔ PHẦN MÁY VÀ THIẾT BỊ CÔNG NGHIỆP QUỐC TẾ": { mst: "0308090119", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH TM DV Ô TÔ HÒA BÌNH MINH - CN KIÊN GIANG": { mst: "3702301028-001", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY CỔ PHẦN CÔNG NGHỆ VÀ CHẾ TẠO ĐÔNG Á": { mst: "0102030558", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH MINH ĐẠO PHÁT": { mst: "4600260039", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY CỔ PHẦN Ô TÔ PHÚ XUÂN": { mst: "3301604459", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH SX TM DV SƠN ÔTÔ CHẤT LƯỢNG CAO": { mst: "0316370624", purpose: "Kinh doanh" },
+  "CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ SƠN ÔTÔ CHẤT LƯỢNG CAO": { mst: "0316370624", purpose: "Kinh doanh" },
+  "CÔNG TY CỔ PHẦN SƠN Ô TÔ VIỆT NAM": { mst: "0107694569", purpose: "Kinh doanh" },
+  "CÔNG TY TNHH SX KD ĐỒ CHƠI ANFA": { mst: "0311168044", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH SẢN XUẤT KINH DOANH ĐỒ CHƠI ANFA": { mst: "0311168044", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH Ô TÔ TIẾN THU ĐÀ NẴNG": { mst: "0402030558", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH SX - DV - TM T.M.T": { mst: "0302057683", purpose: "Kinh doanh" },
+  "CÔNG TY TNHH SẢN XUẤT - DỊCH VỤ - THƯƠNG MẠI T.M.T": { mst: "0302057683", purpose: "Kinh doanh" },
+  "CÔNG TY CỔ PHẦN TMDV Ô TÔ HÒA BÌNH MINH - CHI NHÁNH BÌNH PHƯỚC": { mst: "5200896689-003", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH ROYAL AUTO VIỆT NAM": { mst: "0318116623", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ THANH CHIẾN": { mst: "0600142278", purpose: "(48) mục đích sử dụng khác" },
+  "CTY TNHH SX TM&DV PHỤ TÙNG Ô TÔ ANH TRUNG": { mst: "0310341835", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ Ô TÔ HÒA BÌNH MINH": { mst: "3702301028", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY CỔ PHẦN Ô TÔ NGHĨA VŨNG TÀU": { mst: "3502316891", purpose: "Sử dụng" },
+  "CÔNG TY TNHH THƯƠNG MẠI TÂN LOAN": { mst: "6000826580", purpose: "Sử dụng" },
+  "CÔNG TY TNHH SƠN MINH TOÀN": { mst: "0312107012", purpose: "Kinh doanh" },
+  "HKD LA VĂN PHU": { mst: "0309844513", purpose: "Kinh doanh" },
+  "CÔNG TY TNHH MERCEDES-BENZ VIỆT NAM": { mst: "0300709284", purpose: "(48) mục đích sử dụng khác" },
+  "CÔNG TY TRÁCH NHIỆM HỮU HẠN PPG VIỆT NAM": { mst: "3700785291", purpose: "Kinh doanh" },
+  "CÔNG TY TNHH PPG VIỆT NAM": { mst: "3700785291", purpose: "Kinh doanh" },
+  "CÔNG TY TNHH TOYOTA TIẾN THU QUẢNG NGÃI": { mst: "4300836518", purpose: "(48) mục đích sử dụng khác" }
+};
+
+const CUSTOMER_DB = {};
+for (const [k, v] of Object.entries(RAW_CUSTOMER_DB)) {
+  CUSTOMER_DB[k.normalize("NFC").toUpperCase()] = v;
+}
+
+let skuCatalog = loadSkuCatalog();
+let salesFilesList = [];
+let ledgerFilesList = [];
+let currentResult = null;
+let sharedGpnkCache = [];
+
+function loadSkuCatalog() {
+  try {
+    const rawV8 = localStorage.getItem("NGLM_SKU_CATALOG_V8");
+    if (rawV8) {
+      const parsed = JSON.parse(rawV8);
+      if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+        return parsed;
+      }
+    }
+    const rawOld = localStorage.getItem("NGLM_SKU_CATALOG_V7")
+                || localStorage.getItem("NGLM_SKU_CATALOG_V6_1");
+    if (rawOld) {
+      const parsedOld = JSON.parse(rawOld);
+      const cleaned = {};
+      const autoTrashCodes = ["D835/3L", "D837/5L", "D863/1L", "P083"];
+      for (const [k, v] of Object.entries(parsedOld)) {
+        if (autoTrashCodes.includes(k) && String(v.cas || "") === "-") continue;
+        if (!Array.isArray(v.batches)) {
+          v.batches = DEFAULT_SKU_CATALOG[k]?.batches || [];
+        }
+        cleaned[k] = v;
+      }
+      if (Object.keys(cleaned).length > 0) return cleaned;
+    }
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_SKU_CATALOG));
+}
+
+function persistSkuCatalog() {
+  try {
+    localStorage.setItem("NGLM_SKU_CATALOG_V8", JSON.stringify(skuCatalog));
+  } catch (e) {}
+  refreshSharedGpnkPresets();
+}
+
+function resetCatalogToDefault() {
+  if (!confirm("Khôi phục lại 4 mã hàng gốc ban đầu (1050, A656, D820, BP400PH)? Các mã bạn tự thêm sẽ bị ghi đè nếu chưa sao lưu.")) return;
+  skuCatalog = JSON.parse(JSON.stringify(DEFAULT_SKU_CATALOG));
+  persistSkuCatalog();
+  populateSkuDropdown("1050");
+  renderSkuCatalogTable();
+}
+
+// ===== TỔNG HỢP KHO GPNK DÙNG CHUNG GIỮA NHIỀU MÃ HÀNG =====
+function getAllDistinctPermits() {
+  const map = {};
+  for (const item of Object.values(skuCatalog)) {
+    for (const b of (item.batches || [])) {
+      const g = String(b.gpnk || "").trim();
+      const t = String(b.tkhq || "").trim();
+      if (!g) continue;
+      const key = g.toUpperCase();
+      if (!map[key]) {
+        map[key] = {
+          gpnk: g,
+          tkhq: t,
+          defaultDate: b.importDate || "",
+          items: []
+        };
+      }
+      if (!map[key].tkhq && t) map[key].tkhq = t;
+      map[key].items.push({
+        sku: item.sku,
+        tradeName: item.tradeName,
+        chemName: item.chemName,
+        cas: item.cas,
+        pct: item.pct,
+        factor: item.factor,
+        quota: item.quota,
+        importDate: b.importDate,
+        importKg: b.importKg,
+        tkhq: t
+      });
+    }
+  }
+  return Object.values(map);
+}
+
+function refreshSharedGpnkPresets() {
+  sharedGpnkCache = getAllDistinctPermits();
+  const sel = document.getElementById("sharedGpnkSelect");
+  if (sel) {
+    sel.innerHTML = `<option value="">-- Chọn GPNK đã khai báo (${sharedGpnkCache.length} tờ) --</option>`
+      + sharedGpnkCache.map((p, idx) => {
+        const skuNames = Array.from(new Set(p.items.map(x => x.sku))).join(", ");
+        return `<option value="${idx}">${p.gpnk} [${skuNames}]</option>`;
+      }).join("");
+  }
+  const gList = document.getElementById("gpnkDatalist");
+  if (gList) {
+    gList.innerHTML = sharedGpnkCache.map(p => `<option value="${p.gpnk}"></option>`).join("");
+  }
+  const tList = document.getElementById("tkhqDatalist");
+  if (tList) {
+    const uniqT = Array.from(new Set(sharedGpnkCache.map(x => x.tkhq).filter(Boolean)));
+    tList.innerHTML = uniqT.map(t => `<option value="${t}"></option>`).join("");
+  }
+  const allSkusDl = document.getElementById("allSkusDatalist");
+  if (allSkusDl) {
+    allSkusDl.innerHTML = Object.values(skuCatalog).map(it =>
+      `<option value="${it.sku}">${it.tradeName}</option>`
+    ).join("");
+  }
+}
+
+function applySharedGpnkPreset(idxStr) {
+  if (idxStr === "") return;
+  const preset = sharedGpnkCache[Number(idxStr)];
+  if (!preset) return;
+  document.getElementById("newGpnkNo").value = preset.gpnk;
+  document.getElementById("newTkhqNo").value = preset.tkhq;
+  if (preset.defaultDate && !document.getElementById("newImpDate").value) {
+    document.getElementById("newImpDate").value = preset.defaultDate;
+  }
+}
+
+function onGpnkInputTyped(val) {
+  const clean = String(val || "").trim().toUpperCase();
+  if (!clean) return;
+  const found = sharedGpnkCache.find(x => x.gpnk.toUpperCase() === clean);
+  if (found && found.tkhq) {
+    document.getElementById("newTkhqNo").value = found.tkhq;
+  }
+}
+
+function populateSkuDropdown(selectKey) {
+  const sel = document.getElementById("skuSelect");
+  const keys = Object.keys(skuCatalog);
+  const prevVal = (selectKey && skuCatalog[selectKey]) ? selectKey : (skuCatalog[sel.value] ? sel.value : (keys[0] || ""));
+  sel.innerHTML = keys.length
+    ? Object.values(skuCatalog).map(item =>
+        `<option value="${item.sku}">${item.label || `${item.sku} (${item.tradeName})`}</option>`
+      ).join("")
+    : `<option value="">-- Chưa có mã hàng nào --</option>`;
+  if (prevVal) sel.value = prevVal;
+  refreshSharedGpnkPresets();
+  onSkuChanged(false);
+}
+
+function onSkuChanged(autoRun = true) {
+  const key = document.getElementById("skuSelect").value;
+  const item = skuCatalog[key];
+  if (!item) {
+    document.getElementById("inpFactor").value = 1;
+    document.getElementById("inpQuota").value = 0;
+    renderGpnkBatchTable([]);
+    return;
+  }
+  document.getElementById("inpFactor").value = item.factor;
+  document.getElementById("inpQuota").value = item.quota;
+  renderGpnkBatchTable([]);
+  if (autoRun && (salesFilesList.length > 0 || ledgerFilesList.length > 0)) {
+    refreshAvailableMonths();
+    runReconciliation();
+  }
+}
+
+function onMonthChanged() {
+  const ym = document.getElementById("monthSelect").value;
+  if (ym && ym !== "ALL" && /^\d{4}-\d{2}$/.test(ym)) {
+    document.getElementById("inpReportYear").value = ym.slice(0, 4);
+  }
+  recalcFromInputs();
+}
+
+function fmtNum(n, dec = 2) {
+  return Number(n || 0).toLocaleString("vi-VN", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function normInv(v) {
+  const s = String(v ?? "").normalize("NFC").trim();
+  return /^\d+$/.test(s) ? s.replace(/^0+/, "") : s;
+}
+
+function parseIsoDate(val) {
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return `${val.getFullYear()}-${String(val.getMonth() + 1).padStart(2, "0")}-${String(val.getDate()).padStart(2, "0")}`;
+  }
+  const s = String(val || "").trim();
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : s.slice(0, 10);
+}
+
+function isoToVnDate(iso) {
+  if (!iso || iso.length < 10) return iso || "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function monthBounds(ym, fallbackEndIso = "9999-99-99") {
+  if (!ym || ym === "ALL") {
+    return { start: "0000-00-00", end: fallbackEndIso, label: "" };
+  }
+  const [y, m] = ym.split("-").map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const mm = String(m).padStart(2, "0");
+  const dd = String(lastDay).padStart(2, "0");
+  return {
+    start: `${y}-${mm}-01`,
+    end: `${y}-${mm}-${dd}`,
+    label: `(Từ ngày 01/${mm}/${y} đến ngày ${dd}/${mm}/${y})`
+  };
+}
+
+function matchesSkuToken(rawText, targetSku) {
+  const cleanTarget = String(targetSku || "").normalize("NFC").trim().toUpperCase();
+  const cleanText = String(rawText || "").normalize("NFC").trim().toUpperCase();
+  if (!cleanTarget || !cleanText) return false;
+  if (/[-/_ ]/.test(cleanTarget)) {
+    return cleanText.includes(cleanTarget);
+  }
+  const tokens = cleanText.split(/[^A-Z0-9]+/).filter(Boolean);
+  return tokens.includes(cleanTarget);
+}
+
+function classifyOtherOutReason(dg, rawSoHd) {
+  const low = String(dg || "").normalize("NFC").toLowerCase();
+  const hasNoInv = !normInv(rawSoHd);
+  const isOtherOut = low.includes("xuất kho khác") || low.includes("hỗ trợ") || low.includes("hổ trợ")
+    || low.includes("đổi hàng") || low.includes("bị lỗi") || low.includes("hàng mẫu") || low.includes("khuyến mãi") || hasNoInv;
+
+  if (!isOtherOut) return { isOther: false, badge: "Khớp 100%", noteText: "" };
+  if (low.includes("hỗ trợ") || low.includes("hổ trợ")) {
+    return { isOther: true, badge: "🎁 Đơn hàng xuất hỗ trợ (không HĐ)", noteText: "xuất hỗ trợ (không xuất HĐ)" };
+  }
+  if (low.includes("đổi hàng") || low.includes("bị lỗi")) {
+    return { isOther: true, badge: "🔄 Xuất đổi hàng bị lỗi (không HĐ)", noteText: "xuất đổi hàng bị lỗi (không xuất HĐ)" };
+  }
+  if (low.includes("hàng mẫu") || low.includes("khuyến mãi")) {
+    return { isOther: true, badge: "🧪 Xuất hàng mẫu / KM (không HĐ)", noteText: "xuất hàng mẫu/KM (không xuất HĐ)" };
+  }
+  return { isOther: true, badge: "📦 Xuất kho khác (không HĐ)", noteText: "xuất kho khác (không xuất HĐ)" };
+}
+
+// ===== MODAL NHẬP TRỌN BỘ 1 GIẤY PHÉP NHẬP KHẨU (NHIỀU MÃ HÀNG CÙNG LÚC) =====
+function openPermitMasterModal() {
+  refreshSharedGpnkPresets();
+  const histSel = document.getElementById("permitHistorySelect");
+  histSel.innerHTML = `<option value="">-- Nhập tờ Giấy phép nhập khẩu mới --</option>`
+    + sharedGpnkCache.map((p, idx) =>
+      `<option value="${idx}">${p.gpnk} (${p.items.length} mã hàng)</option>`
+    ).join("");
+
+  const curGpnk = document.getElementById("newGpnkNo").value.trim();
+  const curTkhq = document.getElementById("newTkhqNo").value.trim();
+  const curDate = document.getElementById("newImpDate").value || new Date().toISOString().slice(0, 10);
+
+  document.getElementById("pmGpnkNo").value = curGpnk;
+  document.getElementById("pmTkhqNo").value = curTkhq;
+  document.getElementById("pmDefaultDate").value = curDate;
+
+  const tbody = document.getElementById("permitItemsTableBody");
+  tbody.innerHTML = "";
+  addPermitItemRow({ importDate: curDate, checked: true });
+  addPermitItemRow({ importDate: curDate, checked: true });
+  updatePermitTotalPreview();
+  document.getElementById("permitMasterModal").classList.add("open");
+}
+
+function closePermitMasterModal() {
+  document.getElementById("permitMasterModal").classList.remove("open");
+}
+
+function loadExistingPermitIntoMasterModal(idxStr) {
+  const tbody = document.getElementById("permitItemsTableBody");
+  tbody.innerHTML = "";
+  if (idxStr === "") {
+    const d = document.getElementById("pmDefaultDate").value || new Date().toISOString().slice(0, 10);
+    document.getElementById("pmGpnkNo").value = "";
+    document.getElementById("pmTkhqNo").value = "";
+    addPermitItemRow({ importDate: d, checked: true });
+    updatePermitTotalPreview();
+    return;
+  }
+  const permit = sharedGpnkCache[Number(idxStr)];
+  if (!permit) return;
+  document.getElementById("pmGpnkNo").value = permit.gpnk;
+  document.getElementById("pmTkhqNo").value = permit.tkhq;
+  document.getElementById("pmDefaultDate").value = permit.defaultDate || "";
+
+  for (const it of permit.items) {
+    addPermitItemRow({ ...it, checked: true });
+  }
+  updatePermitTotalPreview();
+}
+
+function syncDefaultDateToPermitRows(newDate) {
+  if (!newDate) return;
+  document.querySelectorAll("#permitItemsTableBody .pm-date").forEach(inp => {
+    if (!inp.value) inp.value = newDate;
+  });
+}
+
+function addPermitItemRow(preset = {}) {
+  const tbody = document.getElementById("permitItemsTableBody");
+  const defDate = preset.importDate || document.getElementById("pmDefaultDate").value || "";
+  const skuVal = String(preset.sku || "").trim().toUpperCase();
+  const catItem = skuVal ? skuCatalog[skuVal] : null;
+  const isChecked = preset.checked !== undefined ? preset.checked : true;
+
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td class="center"><input type="checkbox" class="pm-chk" ${isChecked ? "checked" : ""} onchange="updatePermitTotalPreview()" /></td>
+    <td>
+      <input type="text" class="pm-sku" list="allSkusDatalist" placeholder="VD: 1050" value="${skuVal}" oninput="onPermitRowSkuChanged(this)" />
+      <div class="pm-status">${skuVal ? (catItem ? `<span class="gp-item-badge-exist">✓ Có trong DM</span>` : `<span class="gp-item-badge-new">Ngoài DM KSĐB</span>`) : ""}</div>
+    </td>
+    <td><input type="text" class="pm-trade" placeholder="Tên thương mại SP" value="${(preset.tradeName || catItem?.tradeName || "").replace(/"/g, "&quot;")}" /></td>
+    <td><input type="text" class="pm-chem" placeholder="VD: Toluene" value="${String(preset.chemName || catItem?.chemName || "").replace(/\n/g, " / ").replace(/"/g, "&quot;")}" /></td>
+    <td><input type="text" class="pm-cas" placeholder="VD: 108-88-3" value="${String(preset.cas || catItem?.cas || "").replace(/\n/g, " / ").replace(/"/g, "&quot;")}" /></td>
+    <td><input type="text" class="pm-pct" placeholder="VD: 25-50" value="${String(preset.pct || catItem?.pct || "").replace(/\n/g, " / ").replace(/"/g, "&quot;")}" /></td>
+    <td><input type="number" class="pm-factor" step="0.01" value="${preset.factor || catItem?.factor || 1}" /></td>
+    <td><input type="number" class="pm-quota" step="1" value="${preset.quota || catItem?.quota || 5000}" /></td>
+    <td><input type="date" class="pm-date" value="${defDate}" /></td>
+    <td><input type="number" class="pm-kg" step="0.01" placeholder="0.00" value="${preset.importKg || ""}" oninput="updatePermitTotalPreview()" /></td>
+    <td class="center"><button type="button" class="btn-del-chem" style="width:30px;height:30px;" onclick="this.closest('tr').remove(); updatePermitTotalPreview();">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  updatePermitTotalPreview();
+}
+
+function onPermitRowSkuChanged(inp) {
+  const tr = inp.closest("tr");
+  const code = inp.value.trim().toUpperCase();
+  const statusEl = tr.querySelector(".pm-status");
+  if (!code) {
+    statusEl.innerHTML = "";
+    updatePermitTotalPreview();
+    return;
+  }
+  const catItem = skuCatalog[code];
+  if (catItem) {
+    statusEl.innerHTML = `<span class="gp-item-badge-exist">✓ Có trong DM</span>`;
+    tr.querySelector(".pm-trade").value = catItem.tradeName || "";
+    tr.querySelector(".pm-chem").value = String(catItem.chemName || "").replace(/\n/g, " / ");
+    tr.querySelector(".pm-cas").value = String(catItem.cas || "").replace(/\n/g, " / ");
+    tr.querySelector(".pm-pct").value = String(catItem.pct || "").replace(/\n/g, " / ");
+    tr.querySelector(".pm-factor").value = catItem.factor || 1;
+    tr.querySelector(".pm-quota").value = catItem.quota || 5000;
+  } else {
+    statusEl.innerHTML = `<span class="gp-item-badge-new">+ Sẽ tạo mã mới</span>`;
+  }
+  updatePermitTotalPreview();
+}
+
+function updatePermitTotalPreview() {
+  let totalKg = 0;
+  let validCount = 0;
+  document.querySelectorAll("#permitItemsTableBody tr").forEach(tr => {
+    const isChecked = tr.querySelector(".pm-chk").checked;
+    const sku = tr.querySelector(".pm-sku").value.trim();
+    const kg = parseFloat(tr.querySelector(".pm-kg").value) || 0;
+    if (isChecked && sku && kg > 0) {
+      totalKg += kg;
+      validCount++;
+    }
+  });
+  document.getElementById("permitTotalKgPreview").textContent =
+    `Tổng khối lượng trên GP: ${fmtNum(totalKg)} kg (${validCount} mã hàng được chọn)`;
+}
+
+function scanLedgerImportsIntoPermitModal() {
+  if (!ledgerFilesList.length) {
+    alert("Bạn chưa nạp file Sổ chi tiết vật tư hàng hóa ở mục 1B!");
+    return;
+  }
+  const foundList = [];
+  let detectedTk = "";
+  let detectedDate = "";
+
+  for (const item of ledgerFilesList) {
+    const wb = XLSX.read(item.buf, { type: "array", cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    const colMap = detectLedgerColumnMap(rows);
+
+    let currentBlockSku = "";
+    for (let i = colMap.headerRowIdx + 2; i < rows.length; i++) {
+      const r = rows[i];
+      const kho = String(r[colMap.kho] || "").normalize("NFC").trim();
+      if (!kho || kho.toLowerCase().startsWith("tổng") || kho.startsWith("Mã kho:")) continue;
+      if (kho.startsWith("Mã hàng:")) {
+        currentBlockSku = kho.replace("Mã hàng:", "").trim().toUpperCase();
+        continue;
+      }
+      const nhap = Number(r[colMap.nhap]) || 0;
+      if (nhap <= 0) continue;
+
+      const tenHang = String(r[colMap.tenHang] || "").normalize("NFC").trim();
+      const isoDate = parseIsoDate(r[colMap.ngay]);
+      const dg = String(r[colMap.dienGiai] || "").normalize("NFC").trim();
+      const rawSoHd = colMap.soHd >= 0 ? r[colMap.soHd] : "";
+      const mTk = dg.match(/(?:tờ khai|tk|hóa đơn số)\s*0*(\d+)/i);
+      const tkNum = normInv(rawSoHd) || (mTk ? mTk[1] : "");
+
+      const matchedCatKey = Object.keys(skuCatalog).find(k => matchesSkuToken(`${currentBlockSku} ${tenHang}`, k));
+      const finalSku = matchedCatKey || currentBlockSku || tenHang.split(/\s+/)[0].toUpperCase();
+      const factor = matchedCatKey ? (skuCatalog[matchedCatKey].factor || 1) : 1;
+
+      if (!detectedDate && isoDate) detectedDate = isoDate;
+      if (!detectedTk && tkNum) detectedTk = `${tkNum} (ngày tờ khai ${isoToVnDate(isoDate)})`;
+
+      foundList.push({
+        sku: finalSku,
+        tradeName: matchedCatKey ? skuCatalog[matchedCatKey].tradeName : tenHang,
+        importDate: isoDate,
+        importKg: Number((nhap * factor).toFixed(2)),
+        checked: Boolean(matchedCatKey)
+      });
+    }
+  }
+
+  if (!foundList.length) {
+    alert("Không tìm thấy dòng Nhập kho nào trong Sổ Vật Tư đã nạp.");
+    return;
+  }
+
+  if (!document.getElementById("pmTkhqNo").value && detectedTk) {
+    document.getElementById("pmTkhqNo").value = detectedTk;
+  }
+  if (!document.getElementById("pmDefaultDate").value && detectedDate) {
+    document.getElementById("pmDefaultDate").value = detectedDate;
+  }
+
+  const tbody = document.getElementById("permitItemsTableBody");
+  tbody.innerHTML = "";
+  for (const row of foundList) {
+    addPermitItemRow(row);
+  }
+  updatePermitTotalPreview();
+}
+
+function savePermitMasterBundle() {
+  const gpnk = document.getElementById("pmGpnkNo").value.trim();
+  const tkhq = document.getElementById("pmTkhqNo").value.trim();
+  const defDate = document.getElementById("pmDefaultDate").value;
+
+  if (!gpnk) {
+    alert("Vui lòng nhập Số & ngày Giấy phép nhập khẩu (GPNK)!");
+    return;
+  }
+
+  const rows = [];
+  let rowError = "";
+  document.querySelectorAll("#permitItemsTableBody tr").forEach((tr, idx) => {
+    const isChecked = tr.querySelector(".pm-chk").checked;
+    if (!isChecked) return;
+    const sku = tr.querySelector(".pm-sku").value.trim().toUpperCase();
+    const importKg = parseFloat(tr.querySelector(".pm-kg").value);
+    if (!sku && !(importKg > 0)) return;
+
+    const tradeName = tr.querySelector(".pm-trade").value.trim() || sku;
+    const chemName = tr.querySelector(".pm-chem").value.trim().replace(/\s*\/\s*/g, "\n") || "Hóa chất KSĐB";
+    const cas = tr.querySelector(".pm-cas").value.trim().replace(/\s*\/\s*/g, "\n") || "-";
+    const pct = tr.querySelector(".pm-pct").value.trim().replace(/\s*\/\s*/g, "\n") || "-";
+    const factor = parseFloat(tr.querySelector(".pm-factor").value) || 1;
+    const quota = parseFloat(tr.querySelector(".pm-quota").value) || 5000;
+    const importDate = tr.querySelector(".pm-date").value || defDate;
+
+    if (!sku || !importDate || !(importKg > 0)) {
+      rowError = `Dòng được chọn thứ ${idx + 1} chưa nhập đủ Mã hàng, Ngày nhập hoặc Khối lượng nhập (kg)!`;
+      return;
+    }
+    rows.push({ sku, tradeName, chemName, cas, pct, factor, quota, importDate, importKg });
+  });
+
+  if (rowError) {
+    alert(rowError);
+    return;
+  }
+  if (!rows.length) {
+    alert("Bạn chưa tick chọn dòng mã hàng nào có khối lượng > 0!");
+    return;
+  }
+
+  let newSkusCreated = 0;
+  for (const r of rows) {
+    if (!skuCatalog[r.sku]) {
+      skuCatalog[r.sku] = {
+        sku: r.sku,
+        label: `${r.sku} (${r.tradeName.slice(0, 34)})`,
+        tradeName: r.tradeName,
+        chemName: r.chemName,
+        cas: r.cas,
+        pct: r.pct,
+        groupTitle: "NHÓM 1",
+        gpkd: "312/GCNĐĐK-SCT",
+        quota: r.quota,
+        factor: r.factor,
+        batches: []
+      };
+      newSkusCreated++;
+    } else if (skuCatalog[r.sku].cas === "-" && r.cas !== "-") {
+      skuCatalog[r.sku].tradeName = r.tradeName;
+      skuCatalog[r.sku].label = `${r.sku} (${r.tradeName.slice(0, 34)})`;
+      skuCatalog[r.sku].chemName = r.chemName;
+      skuCatalog[r.sku].cas = r.cas;
+      skuCatalog[r.sku].pct = r.pct;
+      skuCatalog[r.sku].factor = r.factor;
+      skuCatalog[r.sku].quota = r.quota;
+    }
+
+    if (!Array.isArray(skuCatalog[r.sku].batches)) skuCatalog[r.sku].batches = [];
+    const existingBatch = skuCatalog[r.sku].batches.find(b =>
+      b.gpnk.toUpperCase() === gpnk.toUpperCase() && b.importDate === r.importDate
+    );
+    if (existingBatch) {
+      existingBatch.tkhq = tkhq || existingBatch.tkhq;
+      existingBatch.importKg = Number(r.importKg.toFixed(2));
+    } else {
+      skuCatalog[r.sku].batches.push({
+        id: "b_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        gpnk,
+        tkhq,
+        importDate: r.importDate,
+        importKg: Number(r.importKg.toFixed(2))
+      });
+    }
+    skuCatalog[r.sku].batches.sort((a, b) => a.importDate.localeCompare(b.importDate));
+  }
+
+  const currentSelectedSku = document.getElementById("skuSelect").value;
+  persistSkuCatalog();
+  populateSkuDropdown(skuCatalog[currentSelectedSku] ? currentSelectedSku : rows[0].sku);
+  closePermitMasterModal();
+
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+  else renderGpnkBatchTable([]);
+
+  alert(`Đã lưu thành công GPNK "${gpnk}" cho ${rows.length} mã hàng${newSkusCreated ? ` (đã tạo thêm ${newSkusCreated} mã hàng mới)` : ""}!`);
+}
+
+// ===== QUẢN LÝ SỔ THEO DÕI GIẤY PHÉP NHẬP KHẨU (GPNK) =====
+function addGpnkBatch(preset = null) {
+  const sku = document.getElementById("skuSelect").value;
+  const item = skuCatalog[sku];
+  if (!item) return;
+
+  const gpnk = preset ? preset.gpnk : document.getElementById("newGpnkNo").value.trim();
+  const tkhq = preset ? preset.tkhq : document.getElementById("newTkhqNo").value.trim();
+  const importDate = preset ? preset.importDate : document.getElementById("newImpDate").value;
+  const importKg = preset ? preset.importKg : parseFloat(document.getElementById("newImpKg").value);
+
+  if (!gpnk || !importDate || !(importKg > 0)) {
+    alert("Vui lòng nhập đầy đủ: Số & ngày GPNK, Ngày nhập kho và Khối lượng nhập (kg)!");
+    return;
+  }
+
+  if (!Array.isArray(item.batches)) item.batches = [];
+  item.batches.push({
+    id: "b_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+    gpnk, tkhq, importDate, importKg: Number(importKg.toFixed(2))
+  });
+  item.batches.sort((a, b) => a.importDate.localeCompare(b.importDate));
+
+  if (!preset) {
+    document.getElementById("newGpnkNo").value = "";
+    document.getElementById("newTkhqNo").value = "";
+    document.getElementById("newImpKg").value = "";
+    document.getElementById("sharedGpnkSelect").value = "";
+  }
+
+  persistSkuCatalog();
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+  else renderGpnkBatchTable([]);
+}
+
+function editGpnkBatch(batchId) {
+  const sku = document.getElementById("skuSelect").value;
+  const item = skuCatalog[sku];
+  if (!item || !Array.isArray(item.batches)) return;
+  const b = item.batches.find(x => x.id === batchId);
+  if (!b) return;
+
+  document.getElementById("newGpnkNo").value = b.gpnk;
+  document.getElementById("newTkhqNo").value = b.tkhq;
+  document.getElementById("newImpDate").value = b.importDate;
+  document.getElementById("newImpKg").value = b.importKg;
+
+  item.batches = item.batches.filter(x => x.id !== batchId);
+  persistSkuCatalog();
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+  else renderGpnkBatchTable([]);
+  document.getElementById("newGpnkNo").focus();
+}
+
+function deleteGpnkBatch(batchId) {
+  const sku = document.getElementById("skuSelect").value;
+  const item = skuCatalog[sku];
+  if (!item || !Array.isArray(item.batches)) return;
+  item.batches = item.batches.filter(b => b.id !== batchId);
+  persistSkuCatalog();
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+  else renderGpnkBatchTable([]);
+}
+
+function renderGpnkBatchTable(computedBatches) {
+  const sku = document.getElementById("skuSelect").value;
+  const item = skuCatalog[sku];
+  const batches = (computedBatches && computedBatches.length)
+    ? computedBatches
+    : (item?.batches || []).slice().sort((a, b) => a.importDate.localeCompare(b.importDate));
+
+  const tbody = document.getElementById("gpnkBatchTableBody");
+  if (!batches.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="center" style="padding:12px;color:var(--muted);">Chưa khai báo lô GPNK nào cho mã ${sku || "này"}.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = batches.map((b, idx) => {
+    const isVirtual = Boolean(b.isVirtual);
+    return `
+      <tr style="${b.isFuture ? "opacity:0.55;background:#f8fafc;" : ""}">
+        <td><strong>${isVirtual ? "Tồn ĐK" : `Lô ${idx + 1}`}</strong></td>
+        <td>
+          <div><strong>${b.gpnk}</strong> ${b.isFuture ? `<span class="tag-skip">Sau kỳ BC</span>` : ""}</div>
+          <div style="font-size:11px;color:var(--muted);">${b.tkhq ? `TKHQ: ${b.tkhq}` : ""}</div>
+        </td>
+        <td>${b.importDate && b.importDate !== "0000-00-00" ? isoToVnDate(b.importDate) : "Đầu kỳ"}</td>
+        <td class="num">${fmtNum(b.importKg)}</td>
+        <td class="num">${b.periodOpenKg !== undefined ? fmtNum(b.periodOpenKg) : "-"}</td>
+        <td class="num"><strong>${b.periodCloseKg !== undefined ? fmtNum(b.periodCloseKg) : "-"}</strong></td>
+        <td class="center" style="white-space:nowrap;">
+          ${isVirtual ? `<span style="font-size:11px;color:var(--muted);">Tự động</span>` : `
+            <button type="button" title="Sửa lô này" style="background:none;border:none;color:#2563eb;font-weight:700;cursor:pointer;margin-right:4px;" onclick="editGpnkBatch('${b.id}')">✎</button>
+            <button type="button" title="Xóa lô này" style="background:none;border:none;color:#dc2626;font-weight:700;cursor:pointer;" onclick="deleteGpnkBatch('${b.id}')">✕</button>
+          `}
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// ===== QUẢN LÝ FILE SỔ BÁN HÀNG & SỔ VẬT TƯ =====
+async function addSalesFiles(fileList) {
+  if (!fileList || !fileList.length) return;
+  for (const f of fileList) {
+    if (salesFilesList.some(x => x.name === f.name)) continue;
+    const buf = await f.arrayBuffer();
+    const wb = XLSX.read(buf, { type: "array" });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+    const pText = String(rows[1]?.[0] || "").normalize("NFC").trim();
+    salesFilesList.push({ name: f.name, buf, periodLabel: pText });
+  }
+  renderFileChips();
+  refreshAvailableMonths();
+  runReconciliation();
+}
+
+function removeSalesFile(idx) {
+  salesFilesList.splice(idx, 1);
+  renderFileChips();
+  refreshAvailableMonths();
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+}
+
+function clearSalesFiles() {
+  salesFilesList = [];
+  renderFileChips();
+  refreshAvailableMonths();
+  if (ledgerFilesList.length) runReconciliation();
+}
+
+async function addLedgerFiles(fileList) {
+  if (!fileList || !fileList.length) return;
+  for (const f of fileList) {
+    if (ledgerFilesList.some(x => x.name === f.name)) continue;
+    const buf = await f.arrayBuffer();
+    const wb = XLSX.read(buf, { type: "array" });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+    const pText = String(rows[1]?.[0] || "").normalize("NFC").trim();
+    ledgerFilesList.push({ name: f.name, buf, periodLabel: pText });
+  }
+  renderFileChips();
+  refreshAvailableMonths();
+  runReconciliation();
+}
+
+function removeLedgerFile(idx) {
+  ledgerFilesList.splice(idx, 1);
+  renderFileChips();
+  refreshAvailableMonths();
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+}
+
+function clearLedgerFiles() {
+  ledgerFilesList = [];
+  renderFileChips();
+  refreshAvailableMonths();
+  if (salesFilesList.length) runReconciliation();
+}
+
+function renderFileChips() {
+  document.getElementById("salesChips").innerHTML = salesFilesList.map((f, i) => `
+    <span class="file-chip">📄 ${f.name}${f.periodLabel ? ` (${f.periodLabel})` : ""}
+      <button type="button" onclick="removeSalesFile(${i})">✕</button>
+    </span>
+  `).join("");
+
+  document.getElementById("ledgerChips").innerHTML = ledgerFilesList.map((f, i) => `
+    <span class="file-chip inv-chip">📦 ${f.name}${f.periodLabel ? ` (${f.periodLabel})` : ""}
+      <button type="button" onclick="removeLedgerFile(${i})">✕</button>
+    </span>
+  `).join("");
+}
+
+function refreshAvailableMonths() {
+  const targetSku = document.getElementById("skuSelect").value;
+  const monthSet = new Set();
+
+  for (const f of salesFilesList) {
+    const wb = XLSX.read(f.buf, { type: "array", cellDates: true });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+    for (let i = 4; i < rows.length; i++) {
+      const ma = String(rows[i]?.[11] || "").trim();
+      if (!ma || !matchesSkuToken(ma, targetSku)) continue;
+      const iso = parseIsoDate(rows[i]?.[0]);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) monthSet.add(iso.slice(0, 7));
+    }
+  }
+
+  for (const f of ledgerFilesList) {
+    const wb = XLSX.read(f.buf, { type: "array", cellDates: true });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+    let curBlock = "";
+    for (let i = 5; i < rows.length; i++) {
+      const a = String(rows[i]?.[0] || "").trim();
+      if (a.startsWith("Mã hàng:")) { curBlock = a.replace("Mã hàng:", "").trim(); continue; }
+      const b = String(rows[i]?.[1] || "").trim();
+      if (!b || !matchesSkuToken(`${curBlock} ${b}`, targetSku)) continue;
+      const iso = parseIsoDate(rows[i]?.[3]);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) monthSet.add(iso.slice(0, 7));
+    }
+  }
+
+  const sel = document.getElementById("monthSelect");
+  const prev = sel.value;
+  const sortedMonths = Array.from(monthSet).sort();
+  sel.innerHTML = `<option value="ALL">Toàn bộ kỳ trong file (${sortedMonths.length ? `${sortedMonths[0].split("-").reverse().join("/")} – ${sortedMonths[sortedMonths.length - 1].split("-").reverse().join("/")}` : "Tự động"})</option>`
+    + sortedMonths.map(ym => {
+      const [y, m] = ym.split("-");
+      return `<option value="${ym}">Tháng ${m}/${y} (Chốt trọn tháng)</option>`;
+    }).join("");
+
+  if (prev && (prev === "ALL" || monthSet.has(prev))) {
+    sel.value = prev;
+  } else if (sortedMonths.length === 1) {
+    sel.value = sortedMonths[0];
+  } else {
+    sel.value = "ALL";
+  }
+
+  const activeYm = sel.value !== "ALL" ? sel.value : (sortedMonths[0] || "");
+  if (activeYm && /^\d{4}-\d{2}$/.test(activeYm)) {
+    document.getElementById("inpReportYear").value = activeYm.slice(0, 4);
+  }
+}
+
+// PARSE SỔ BÁN HÀNG (BAO GỒM CẢ PHIẾU HÀNG BÁN TRẢ LẠI BTL)
+function parseSalesLedgers(targetSku, bounds) {
+  const seenSalesTx = new Set();
+  const salesTxList = [];
+  let totalGrossUnit = 0;
+  let totalReturnUnit = 0;
+  let minIso = "9999-99-99";
+  let maxIso = "0000-00-00";
+
+  for (const fileObj of salesFilesList) {
+    const wb = XLSX.read(fileObj.buf, { type: "array", cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+    let hIdx = 3;
+    for (let r = 0; r < Math.min(8, rows.length); r++) {
+      const joined = (rows[r] || []).map(x => String(x || "").normalize("NFC").toLowerCase()).join("|");
+      if (joined.includes("mã hàng") && joined.includes("tổng số lượng bán")) {
+        hIdx = r;
+        break;
+      }
+    }
+    const hRow = rows[hIdx] || [];
+    const col = { ngay: 0, soCt: 2, soHd: 4, dg: 5, tenKh: 8, mst: 10, maHang: 11, tenHang: 12, slBan: 15, slTra: 19 };
+    hRow.forEach((c, idx) => {
+      const s = String(c || "").normalize("NFC").trim().toLowerCase();
+      if (s === "ngày hạch toán") col.ngay = idx;
+      else if (s === "số chứng từ") col.soCt = idx;
+      else if (s === "số hóa đơn") col.soHd = idx;
+      else if (s === "tên khách hàng") col.tenKh = idx;
+      else if (s === "mã số thuế") col.mst = idx;
+      else if (s === "mã hàng") col.maHang = idx;
+      else if (s === "tên hàng") col.tenHang = idx;
+      else if (s.includes("tổng số lượng bán")) col.slBan = idx;
+      else if (s.includes("tổng số lượng trả lại")) col.slTra = idx;
+    });
+
+    for (let i = hIdx + 1; i < rows.length; i++) {
+      const r = rows[i];
+      const maHang = String(r[col.maHang] || "").normalize("NFC").trim();
+      const tenHang = String(r[col.tenHang] || "").normalize("NFC").trim();
+      if (!maHang && !tenHang) continue;
+      if (String(r[col.ngay] || "").toLowerCase().startsWith("tổng")) continue;
+      if (!matchesSkuToken(maHang, targetSku)) continue;
+
+      const isoDate = parseIsoDate(r[col.ngay]);
+      if (isoDate && isoDate.length === 10) {
+        if (isoDate < bounds.start || isoDate > bounds.end) continue;
+        if (isoDate < minIso) minIso = isoDate;
+        if (isoDate > maxIso) maxIso = isoDate;
+      }
+
+      const soCt = String(r[col.soCt] || "").normalize("NFC").trim();
+      const inv = normInv(r[col.soHd]) || soCt;
+      const buyer = String(r[col.tenKh] || "").normalize("NFC").trim();
+      const rawMst = String(r[col.mst] || "").normalize("NFC").trim();
+      const slBan = Number(r[col.slBan]) || 0;
+      const slTra = Number(r[col.slTra]) || 0;
+      const netUnit = slBan - slTra;
+      if (netUnit === 0) continue;
+
+      const fp = `${inv}|${soCt}|${isoDate}|${maHang}|${netUnit}`;
+      if (seenSalesTx.has(fp)) continue;
+      seenSalesTx.add(fp);
+
+      totalGrossUnit += slBan;
+      totalReturnUnit += slTra;
+      const key = buyer.toUpperCase();
+      const db = CUSTOMER_DB[key] || { mst: "", purpose: "(48) mục đích sử dụng khác" };
+
+      salesTxList.push({
+        inv, soCt, date: isoDate, buyer,
+        mst: rawMst || db.mst,
+        purpose: db.purpose,
+        unit: netUnit,
+        isReturn: netUnit < 0,
+        isOther: false
+      });
+    }
+  }
+
+  salesTxList.sort((a, b) => a.date.localeCompare(b.date) || a.inv.localeCompare(b.inv));
+  const totalNetUnit = Number((totalGrossUnit - totalReturnUnit).toFixed(4));
+  return {
+    hasData: salesFilesList.length > 0,
+    minIso: minIso === "9999-99-99" ? "" : minIso,
+    maxIso: maxIso === "0000-00-00" ? "" : maxIso,
+    totalGrossUnit,
+    totalReturnUnit,
+    totalNetUnit,
+    salesTxList
+  };
+}
+
+// PARSE SỔ VẬT TƯ
+function detectLedgerColumnMap(rows) {
+  let headerRowIdx = 3;
+  for (let r = 0; r < Math.min(10, rows.length); r++) {
+    const rowStr = (rows[r] || []).map(x => String(x || "").normalize("NFC").toLowerCase()).join("|");
+    if (rowStr.includes("tên kho") && rowStr.includes("diễn giải")) {
+      headerRowIdx = r;
+      break;
+    }
+  }
+  const hRow = rows[headerRowIdx] || [];
+  const map = {
+    headerRowIdx, kho: 0, tenHang: 1, ngay: 3, soCt: 5, soHd: -1,
+    dienGiai: 7, nhap: 10, xuat: 12, ton: 14, doiTuong: -1
+  };
+  hRow.forEach((cell, idx) => {
+    const h = String(cell || "").normalize("NFC").trim().toLowerCase();
+    if (h.includes("tên kho")) map.kho = idx;
+    else if (h.includes("tên hàng")) map.tenHang = idx;
+    else if (h.includes("ngày hạch toán")) map.ngay = idx;
+    else if (h.includes("số chứng từ")) map.soCt = idx;
+    else if (h.includes("số hóa đơn")) map.soHd = idx;
+    else if (h.includes("diễn giải")) map.dienGiai = idx;
+    else if (h === "nhập") map.nhap = idx;
+    else if (h === "xuất") map.xuat = idx;
+    else if (h === "tồn") map.ton = idx;
+    else if (h.includes("đối tượng")) map.doiTuong = idx;
+  });
+  return map;
+}
+
+function extractBuyerAndInvFromLedger(dg, soCt, rawSoHd, rawDt) {
+  let buyer = String(rawDt || "").normalize("NFC").trim();
+  let inv = normInv(rawSoHd);
+  if (!buyer) {
+    const mCust = dg.match(/(?:bán hàng|xuất kho khác cho)\s+(.+?)(?:\s+theo hóa đơn|\s*-đổi|\s*- hổ trợ|\s*- hỗ trợ|$)/i);
+    buyer = mCust ? mCust[1].trim() : dg;
+  }
+  if (!inv) {
+    const mInv = dg.match(/(?:hóa đơn số)\s*0*(\d+)/i);
+    inv = mInv ? mInv[1] : "";
+  }
+  return { buyer: buyer.normalize("NFC"), inv };
+}
+
+function parseInventoryLedgers(targetSku, bounds) {
+  const seenTx = new Set();
+  const whOpeningBeforeStart = {};
+  let impUnit = 0;
+  let expCommercialUnit = 0;
+  let expOtherUnit = 0;
+  let intOutUnit = 0;
+  const ledgerImports = [];
+  const ledgerCommercialTxList = [];
+  const otherOutTxList = [];
+  const ledgerOutTxList = [];
+  const auditRows = [];
+  let ledgerMinIso = "9999-99-99";
+  let ledgerMaxIso = "0000-00-00";
+  let hasTargetInFile = false;
+
+  for (const item of ledgerFilesList) {
+    const wb = XLSX.read(item.buf, { type: "array", cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    const colMap = detectLedgerColumnMap(rows);
+
+    let currentBlockSku = "";
+    for (let i = colMap.headerRowIdx + 2; i < rows.length; i++) {
+      const r = rows[i];
+      const kho = String(r[colMap.kho] || "").normalize("NFC").trim();
+      if (!kho || kho.toLowerCase().startsWith("tổng") || kho.startsWith("Mã kho:")) continue;
+      if (kho.startsWith("Mã hàng:")) {
+        currentBlockSku = kho.replace("Mã hàng:", "").trim().toUpperCase();
+        continue;
+      }
+
+      const tenHang = String(r[colMap.tenHang] || "").normalize("NFC").trim();
+      if (!tenHang) continue;
+      if (!matchesSkuToken(`${currentBlockSku} ${tenHang}`, targetSku)) continue;
+
+      hasTargetInFile = true;
+      const isoDate = parseIsoDate(r[colMap.ngay]);
+      const soCt = String(r[colMap.soCt] || "").normalize("NFC").trim();
+      const rawSoHd = colMap.soHd >= 0 ? r[colMap.soHd] : "";
+      const dg = String(r[colMap.dienGiai] || "").normalize("NFC").trim();
+      const nhap = Number(r[colMap.nhap]) || 0;
+      const xuat = Number(r[colMap.xuat]) || 0;
+      const ton = Number(r[colMap.ton]) || 0;
+      const rawDt = colMap.doiTuong >= 0 ? r[colMap.doiTuong] : "";
+
+      if (dg.toLowerCase() === "số dư đầu kỳ") {
+        if (whOpeningBeforeStart[kho] === undefined) whOpeningBeforeStart[kho] = ton;
+        if (bounds.start === "0000-00-00") {
+          auditRows.push({ excelRow: i + 1, date: "-", kho, soHd: "-", dg, nhap: 0, xuat: 0, ton, status: "open" });
+        }
+        continue;
+      }
+
+      const fp = `${kho}|${isoDate}|${soCt}|${dg}|${nhap}|${xuat}`;
+      if (seenTx.has(fp)) continue;
+      seenTx.add(fp);
+
+      if (isoDate && isoDate.length === 10 && isoDate < bounds.start) {
+        whOpeningBeforeStart[kho] = ton;
+        continue;
+      }
+      if (isoDate && isoDate.length === 10 && isoDate > bounds.end) {
+        continue;
+      }
+
+      if (isoDate && isoDate.length === 10) {
+        if (isoDate < ledgerMinIso) ledgerMinIso = isoDate;
+        if (isoDate > ledgerMaxIso) ledgerMaxIso = isoDate;
+      }
+
+      if (dg.toLowerCase().includes("nội bộ")) {
+        intOutUnit += xuat;
+        auditRows.push({ excelRow: i + 1, date: isoDate, kho, soHd: normInv(rawSoHd) || soCt, dg, nhap, xuat, ton, status: "skip" });
+        continue;
+      }
+
+      if (nhap > 0) {
+        impUnit += nhap;
+        const mTk = dg.match(/(?:tờ khai|tk|hóa đơn số)\s*0*(\d+)/i);
+        const tkNum = normInv(rawSoHd) || (mTk ? mTk[1] : "");
+        ledgerImports.push({
+          date: isoDate,
+          unit: nhap,
+          tkNum,
+          tkhq: tkNum ? `${tkNum} (ngày tờ khai ${isoToVnDate(isoDate)})` : ""
+        });
+        auditRows.push({ excelRow: i + 1, date: isoDate, kho, soHd: tkNum || soCt, dg, nhap, xuat: 0, ton, status: "ok" });
+      } else if (xuat > 0) {
+        const { buyer, inv } = extractBuyerAndInvFromLedger(dg, soCt, rawSoHd, rawDt);
+        const otherCls = classifyOtherOutReason(dg, inv || rawSoHd);
+        const docKey = inv || soCt;
+        const key = buyer.toUpperCase();
+        const db = CUSTOMER_DB[key] || { mst: "", purpose: "(48) mục đích sử dụng khác" };
+
+        ledgerOutTxList.push({
+          docKey, inv, soCt, date: isoDate, buyer, unit: xuat, dg,
+          isOther: otherCls.isOther, otherBadge: otherCls.badge
+        });
+
+        if (otherCls.isOther) {
+          expOtherUnit += xuat;
+          otherOutTxList.push({
+            inv: soCt, soCt, date: isoDate, buyer,
+            mst: db.mst, purpose: db.purpose,
+            unit: xuat, isOther: true, noteText: otherCls.noteText
+          });
+          auditRows.push({ excelRow: i + 1, date: isoDate, kho, soHd: soCt, dg, nhap: 0, xuat, ton, status: "other", badge: otherCls.badge });
+        } else {
+          expCommercialUnit += xuat;
+          ledgerCommercialTxList.push({
+            inv: docKey, soCt, date: isoDate, buyer,
+            mst: db.mst, purpose: db.purpose,
+            unit: xuat, isOther: false
+          });
+          auditRows.push({ excelRow: i + 1, date: isoDate, kho, soHd: docKey, dg, nhap: 0, xuat, ton, status: "ok" });
+        }
+      }
+    }
+  }
+
+  const openUnit = Object.values(whOpeningBeforeStart).reduce((s, v) => s + v, 0);
+  return {
+    hasData: hasTargetInFile,
+    minIso: ledgerMinIso === "9999-99-99" ? "" : ledgerMinIso,
+    maxIso: ledgerMaxIso === "0000-00-00" ? "" : ledgerMaxIso,
+    openUnit,
+    impUnit,
+    expCommercialUnit,
+    expOtherUnit,
+    intOutUnit,
+    ledgerImports,
+    ledgerCommercialTxList,
+    otherOutTxList,
+    ledgerOutTxList,
+    auditRows
+  };
+}
+
+// ===== PHÂN BỔ FIFO THEO GIẤY PHÉP NHẬP KHẨU (KHÔNG BAO GIỜ LẤY GPNK SAU KỲ BÁO CÁO) =====
+function allocateFifoAcrossGpnk(catalogItem, effectiveEndIso, effectiveStartIso, factor, openKg, impKg, ledgerImports, allOutTxChronological, includeOtherOut) {
+  const allSavedBatches = (catalogItem.batches || []).slice().sort((a, b) => a.importDate.localeCompare(b.importDate));
+
+  // Tách riêng các lô phát sinh SAU kỳ báo cáo (VD: lô tháng 7 & tháng 10 không bao giờ được kéo vào báo cáo 6 tháng đầu năm!)
+  const validUpToEnd = allSavedBatches.filter(b => !effectiveEndIso || b.importDate <= effectiveEndIso);
+  const futureBatches = allSavedBatches.filter(b => effectiveEndIso && b.importDate > effectiveEndIso);
+
+  const priorBatches = validUpToEnd.filter(b => effectiveStartIso && b.importDate < effectiveStartIso);
+  const inPeriodBatches = validUpToEnd.filter(b => !effectiveStartIso || (b.importDate >= effectiveStartIso && b.importDate <= effectiveEndIso));
+
+  const totalPriorCatalogKg = priorBatches.reduce((s, b) => s + Number(b.importKg || 0), 0);
+  const activeBatches = [];
+
+  // Trường hợp 1: Có tồn đầu kỳ từ Sổ Vật Tư (hoặc nhập tay) lớn hơn lượng tồn của các GPNK trước kỳ -> tạo dòng Tồn đầu kỳ trước GPNK
+  const prePermitOpenKg = Math.max(0, Number((openKg - totalPriorCatalogKg).toFixed(2)));
+  if (prePermitOpenKg > 0.001 || (!priorBatches.length && !inPeriodBatches.length)) {
+    const tkhqFallback = ledgerImports[0]?.tkhq || "";
+    const hasInPeriodImpWithoutBatch = !inPeriodBatches.length && impKg > 0;
+    const initOpen = prePermitOpenKg > 0.001 ? prePermitOpenKg : openKg;
+    const initImp = hasInPeriodImpWithoutBatch ? impKg : 0;
+
+    activeBatches.push({
+      id: "virtual_pre_permit",
+      isVirtual: true,
+      gpnk: initOpen > 0
+        ? "Tồn đầu kỳ (Hàng tồn kho trước ngày cấp GPNK)"
+        : "Chưa khai báo số GPNK trong kỳ này",
+      tkhq: tkhqFallback,
+      importDate: effectiveStartIso || "0000-00-00",
+      importKg: initImp,
+      periodOpenKg: initOpen,
+      periodImpKg: initImp,
+      remAvailKg: Number((initOpen + initImp).toFixed(2)),
+      periodSoldKg: 0,
+      periodOtherOutKg: 0,
+      periodCloseKg: Number((initOpen + initImp).toFixed(2)),
+      otherNotes: [],
+      returnNotes: [],
+      buyersMap: {}
+    });
+  }
+
+  // Trường hợp 2: Các GPNK nhập trước kỳ báo cáo vẫn còn tồn đầu kỳ
+  const consumedBeforePeriodKg = (openKg > 0 && totalPriorCatalogKg > openKg)
+    ? Number((totalPriorCatalogKg - openKg).toFixed(2))
+    : 0;
+  let remBefore = consumedBeforePeriodKg;
+
+  for (const b of priorBatches) {
+    const bKg = Number(b.importKg || 0);
+    const usedBefore = Math.min(bKg, remBefore);
+    const pOpen = Number((bKg - usedBefore).toFixed(2));
+    remBefore = Number((remBefore - usedBefore).toFixed(2));
+
+    activeBatches.push({
+      ...b,
+      periodOpenKg: pOpen,
+      periodImpKg: 0,
+      remAvailKg: pOpen,
+      periodSoldKg: 0,
+      periodOtherOutKg: 0,
+      periodCloseKg: pOpen,
+      otherNotes: [],
+      returnNotes: [],
+      buyersMap: {}
+    });
+  }
+
+  // Trường hợp 3: Các GPNK nhập ngay trong kỳ báo cáo
+  for (const b of inPeriodBatches) {
+    const bKg = Number(b.importKg || 0);
+    activeBatches.push({
+      ...b,
+      periodOpenKg: 0,
+      periodImpKg: bKg,
+      remAvailKg: bKg,
+      periodSoldKg: 0,
+      periodOtherOutKg: 0,
+      periodCloseKg: bKg,
+      otherNotes: [],
+      returnNotes: [],
+      buyersMap: {}
+    });
+  }
+
+  // Phân bổ từng giao dịch xuất bán & trả lại theo thứ tự thời gian (FIFO)
+  for (const tx of allOutTxChronological) {
+    const fullTxKg = Number((tx.unit * factor).toFixed(2));
+
+    // Nếu là phiếu trả lại hàng bán (unit < 0), trừ thẳng vào khách hàng đó ở lô gần nhất có bán cho khách này
+    if (tx.isReturn || tx.unit < 0) {
+      const retKg = Math.abs(fullTxKg);
+      const retUnit = Math.abs(tx.unit);
+      const targetBatch = [...activeBatches].reverse().find(b => b.buyersMap[tx.buyer.toUpperCase()]) || activeBatches[activeBatches.length - 1];
+      if (targetBatch) {
+        targetBatch.remAvailKg = Number((targetBatch.remAvailKg + retKg).toFixed(2));
+        targetBatch.periodCloseKg = Number((targetBatch.periodCloseKg + retKg).toFixed(2));
+        targetBatch.periodSoldKg = Number((targetBatch.periodSoldKg - retKg).toFixed(2));
+        addTxToBatchBuyers(targetBatch, tx, -retUnit, -retKg, false);
+        targetBatch.returnNotes.push(`Khách trả lại ${fmtNum(retKg)} kg (${fmtNum(retUnit, 0)} ĐVT - phiếu ${tx.soCt})`);
+      }
+      continue;
+    }
+
+    let remTxKg = fullTxKg;
+    let splitPartsCount = 0;
+
+    for (let i = 0; i < activeBatches.length; i++) {
+      if (remTxKg <= 0.0001) break;
+      const batch = activeBatches[i];
+      if (batch.remAvailKg <= 0.0001 && i < activeBatches.length - 1) continue;
+
+      const takeKg = (i === activeBatches.length - 1)
+        ? remTxKg
+        : Math.min(batch.remAvailKg, remTxKg);
+
+      const isSplitInvoice = (takeKg < fullTxKg - 0.01) || (splitPartsCount > 0);
+      splitPartsCount++;
+
+      const takeUnit = Number((takeKg / factor).toFixed(4));
+      batch.remAvailKg = Number((batch.remAvailKg - takeKg).toFixed(2));
+      batch.periodCloseKg = Number((batch.periodCloseKg - takeKg).toFixed(2));
+      remTxKg = Number((remTxKg - takeKg).toFixed(2));
+
+      if (tx.isOther && !includeOtherOut) {
+        batch.periodOtherOutKg = Number((batch.periodOtherOutKg + takeKg).toFixed(2));
+        batch.otherNotes.push(`${fmtNum(takeKg)} kg (${fmtNum(takeUnit, 0)} ĐVT - phiếu ${tx.soCt}: ${tx.noteText})`);
+      } else {
+        batch.periodSoldKg = Number((batch.periodSoldKg + takeKg).toFixed(2));
+        addTxToBatchBuyers(batch, tx, takeUnit, takeKg, isSplitInvoice);
+      }
+    }
+  }
+
+  for (const b of activeBatches) {
+    b.buyers = Object.values(b.buyersMap).filter(x => Math.abs(x.kg) > 0.001 || x.invs.length > 0);
+  }
+
+  const futurePreview = futureBatches.map(b => ({
+    ...b,
+    isFuture: true,
+    periodOpenKg: 0,
+    periodImpKg: 0,
+    periodSoldKg: 0,
+    periodCloseKg: 0,
+    buyers: []
+  }));
+
+  return { activeBatches, futurePreview };
+}
+
+function addTxToBatchBuyers(batch, tx, unitPart, kgPart, isSplitInvoice = false) {
+  const key = tx.buyer.toUpperCase();
+  if (!batch.buyersMap[key]) {
+    batch.buyersMap[key] = {
+      name: tx.buyer,
+      mst: tx.mst || "",
+      invs: [],
+      unit: 0,
+      kg: 0,
+      purpose: tx.purpose || "(48) mục đích sử dụng khác"
+    };
+  }
+  if (tx.inv && !tx.isReturn) {
+    const invDisplay = isSplitInvoice ? `${tx.inv} (${fmtNum(kgPart)} kg)` : tx.inv;
+    if (!batch.buyersMap[key].invs.includes(invDisplay)) {
+      batch.buyersMap[key].invs.push(invDisplay);
+    }
+  }
+  batch.buyersMap[key].unit = Number((batch.buyersMap[key].unit + unitPart).toFixed(4));
+  batch.buyersMap[key].kg = Number((batch.buyersMap[key].kg + kgPart).toFixed(2));
+}
+
+// CHẠY TỔNG HỢP & ĐỐI SOÁT
+function runReconciliation() {
+  if (!salesFilesList.length && !ledgerFilesList.length) {
+    alert("Vui lòng nạp ít nhất 1 file Sổ chi tiết bán hàng hoặc Sổ chi tiết vật tư hàng hóa!");
+    return;
+  }
+
+  const targetSku = document.getElementById("skuSelect").value;
+  const catalogItem = skuCatalog[targetSku];
+  if (!catalogItem) {
+    alert("Vui lòng chọn hoặc thêm một mã hàng hợp lệ trước!");
+    return;
+  }
+
+  const selectedMonth = document.getElementById("monthSelect").value;
+  const bounds = monthBounds(selectedMonth);
+  const reportYear = parseInt(document.getElementById("inpReportYear").value, 10) || new Date().getFullYear();
+  const factor = parseFloat(document.getElementById("inpFactor").value) || catalogItem.factor || 1;
+  const quotaKg = parseFloat(document.getElementById("inpQuota").value) || catalogItem.quota || 0;
+  const includeOtherOut = document.getElementById("chkIncludeOtherOutInReport").checked;
+  const showZeroBatches = document.getElementById("chkShowZeroBatches").checked;
+
+  const salesRes = parseSalesLedgers(targetSku, bounds);
+  const invRes = parseInventoryLedgers(targetSku, bounds);
+
+  // Xác định ngày đầu và ngày cuối thực tế của kỳ báo cáo (dùng để chặn tuyệt đối GPNK của tháng sau!)
+  const effectiveStartIso = bounds.start !== "0000-00-00"
+    ? bounds.start
+    : (salesRes.minIso || invRes.minIso || `${reportYear}-01-01`);
+  const effectiveEndIso = bounds.end !== "9999-99-99"
+    ? bounds.end
+    : (salesRes.maxIso || invRes.maxIso || `${reportYear}-12-31`);
+
+  let periodText = bounds.label;
+  if (!periodText) {
+    if (salesRes.hasData && salesRes.minIso && salesRes.maxIso) {
+      periodText = `(Từ ngày ${isoToVnDate(salesRes.minIso)} đến ngày ${isoToVnDate(salesRes.maxIso)})`;
+    } else if (invRes.hasData && invRes.minIso && invRes.maxIso) {
+      periodText = `(Từ ngày ${isoToVnDate(invRes.minIso)} đến ngày ${isoToVnDate(invRes.maxIso)})`;
+    } else {
+      periodText = `(Kỳ báo cáo năm ${reportYear})`;
+    }
+  }
+
+  const manualOpenKg = parseFloat(document.getElementById("inpManualOpenKg").value);
+  const openUnit = invRes.hasData ? invRes.openUnit : (manualOpenKg > 0 ? Number((manualOpenKg / factor).toFixed(4)) : 0);
+  const impUnit = invRes.impUnit;
+  const otherOutUnit = invRes.expOtherUnit;
+  const reportExpUnit = (salesRes.hasData ? salesRes.totalNetUnit : invRes.expCommercialUnit) + (includeOtherOut ? otherOutUnit : 0);
+
+  const openKg = invRes.hasData ? Number((openUnit * factor).toFixed(2)) : (manualOpenKg > 0 ? Number(manualOpenKg.toFixed(2)) : 0);
+  const impKg = Number((impUnit * factor).toFixed(2));
+  const expKg = Number((reportExpUnit * factor).toFixed(2));
+  const otherOutKg = Number((otherOutUnit * factor).toFixed(2));
+
+  const hasOpenInfo = invRes.hasData || manualOpenKg > 0;
+  const closeUnit = hasOpenInfo ? (openUnit + impUnit - reportExpUnit - (includeOtherOut ? 0 : otherOutUnit)) : 0;
+  const closeKg = hasOpenInfo ? Number((openKg + impKg - expKg - (includeOtherOut ? 0 : otherOutKg)).toFixed(2)) : 0;
+
+  const commercialTxSource = salesRes.hasData ? salesRes.salesTxList : invRes.ledgerCommercialTxList;
+  const allOutTxChronological = [...commercialTxSource, ...invRes.otherOutTxList]
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const { activeBatches, futurePreview } = allocateFifoAcrossGpnk(
+    catalogItem, effectiveEndIso, effectiveStartIso, factor, openKg, impKg, invRes.ledgerImports, allOutTxChronological, includeOtherOut
+  );
+
+  const reportBatches = activeBatches.length ? activeBatches : [];
+  const tableBatchesDisplay = showZeroBatches ? [...activeBatches, ...futurePreview] : activeBatches;
+
+  const yearBatchesUpToPeriod = (catalogItem.batches || []).filter(b =>
+    String(b.importDate || "").startsWith(String(reportYear)) && b.importDate <= effectiveEndIso
+  );
+  const totalImpInYear = yearBatchesUpToPeriod.length
+    ? yearBatchesUpToPeriod.reduce((s, b) => s + Number(b.importKg || 0), 0)
+    : impKg;
+  const remQuota = Number((quotaKg - totalImpInYear).toFixed(2));
+
+  const missingGpnkImport = invRes.ledgerImports.find(li =>
+    !(catalogItem.batches || []).some(b => Math.abs(b.importKg - Number((li.unit * factor).toFixed(2))) < 0.5 && b.importDate === li.date)
+  );
+
+  const crossRows = buildCrossCheckRows(salesRes.salesTxList, invRes.ledgerOutTxList);
+  const commercialDiffUnit = Number((salesRes.totalNetUnit - invRes.expCommercialUnit).toFixed(4));
+
+  currentResult = {
+    ...catalogItem,
+    factor, quota: quotaKg, reportYear,
+    selectedMonth, periodText,
+    effectiveStartIso, effectiveEndIso,
+    salesRes, invRes, includeOtherOut, hasOpenInfo,
+    openUnit, impUnit, reportExpUnit, otherOutUnit, closeUnit,
+    openKg, impKg, expKg, otherOutKg, closeKg,
+    totalImpInYear, remQuota,
+    commercialDiffUnit, crossRows,
+    allocatedBatches: tableBatchesDisplay,
+    reportBatches,
+    missingGpnkImport
+  };
+
+  renderDashboard();
+}
+
+function buildCrossCheckRows(salesTxList, ledgerOutTxList) {
+  const map = {};
+  for (const s of salesTxList) {
+    const k = s.isReturn ? `${s.soCt} (Trả lại HĐ ${s.inv})` : (normInv(s.inv) || s.soCt);
+    if (!map[k]) {
+      map[k] = {
+        docKey: k, date: s.date, buyer: s.buyer,
+        salesUnit: 0, invUnit: 0, isOther: s.isReturn,
+        statusBadge: s.isReturn ? "↩️ Phiếu hàng bán trả lại" : "Khớp 100%"
+      };
+    }
+    map[k].salesUnit += s.unit;
+  }
+  for (const l of ledgerOutTxList) {
+    const k = l.docKey;
+    if (!map[k]) {
+      map[k] = {
+        docKey: l.isOther ? `${l.soCt} (Không HĐ)` : k,
+        date: l.date, buyer: l.buyer,
+        salesUnit: 0, invUnit: 0,
+        isOther: l.isOther,
+        statusBadge: l.isOther ? l.otherBadge : "Chưa có trên Sổ bán hàng"
+      };
+    }
+    map[k].invUnit += l.unit;
+    if (l.isOther) {
+      map[k].isOther = true;
+      map[k].statusBadge = l.otherBadge;
+    }
+  }
+  return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function recalcFromInputs() {
+  if (salesFilesList.length || ledgerFilesList.length) runReconciliation();
+}
+
+function renderDashboard() {
+  const r = currentResult;
+  if (!r) return;
+
+  renderGpnkBatchTable(r.allocatedBatches);
+
+  const syncBadge = document.getElementById("syncImportBadge");
+  if (r.missingGpnkImport) {
+    const mKg = Number((r.missingGpnkImport.unit * r.factor).toFixed(2));
+    syncBadge.innerHTML = `<button type="button" class="btn-sm-add" style="background:#fefcbf;color:#744210;border-color:#f6e05e;" onclick="quickAddMissingImport('${r.missingGpnkImport.date}', ${mKg}, '${r.missingGpnkImport.tkhq}', '${r.missingGpnkImport.tkNum || ""}')">+ Có lô nhập ${fmtNum(mKg)} kg ngày ${isoToVnDate(r.missingGpnkImport.date)} chưa gắn GPNK</button>`;
+  } else {
+    syncBadge.innerHTML = `<span class="tag-ok">Đúng kỳ GPNK</span>`;
+  }
+
+  document.getElementById("kpiOpenKg").textContent = `${fmtNum(r.openKg)} kg`;
+  document.getElementById("kpiOpenUnit").textContent = r.invRes.hasData
+    ? `${fmtNum(r.openUnit, 0)} ĐVT (Sổ VT)`
+    : (r.openKg > 0 ? `${fmtNum(r.openUnit, 0)} ĐVT (Nhập tay)` : "Chưa nạp Sổ VT / Tồn ĐK");
+  document.getElementById("kpiImpKg").textContent = `${fmtNum(r.impKg)} kg`;
+  document.getElementById("kpiImpUnit").textContent = r.invRes.hasData ? `${fmtNum(r.impUnit, 0)} ĐVT` : "Chưa nạp Sổ vật tư";
+  document.getElementById("kpiExpKg").textContent = `${fmtNum(r.expKg)} kg`;
+  document.getElementById("kpiExpUnit").textContent = `${fmtNum(r.reportExpUnit, 0)} ĐVT${r.salesRes.totalReturnUnit > 0 ? ` (đã trừ ${fmtNum(r.salesRes.totalReturnUnit, 0)} trả lại)` : ""}`;
+  document.getElementById("kpiCloseKg").textContent = r.hasOpenInfo ? `${fmtNum(r.closeKg)} kg` : "Cần nhập Tồn ĐK";
+  document.getElementById("kpiCloseUnit").textContent = r.hasOpenInfo ? `${fmtNum(r.closeUnit, 0)} ĐVT` : "Nạp Sổ VT hoặc gõ Tồn ĐK";
+  document.getElementById("kpiRemQuota").textContent = `${fmtNum(r.remQuota)} kg`;
+  const pctUsed = r.quota > 0 ? ((r.totalImpInYear / r.quota) * 100).toFixed(1).replace(".", ",") : "0";
+  document.getElementById("kpiQuotaNote").textContent = `Nhập trong kỳ năm ${r.reportYear}: ${fmtNum(r.totalImpInYear, 0)} kg (${pctUsed}%)`;
+
+  const banner = document.getElementById("reconBanner");
+  const statusEl = document.getElementById("reconStatusText");
+  banner.style.display = "flex";
+
+  const retNote = r.salesRes.totalReturnUnit > 0
+    ? ` (đã trừ ${fmtNum(r.salesRes.totalReturnUnit, 0)} ĐVT hàng bán trả lại)`
+    : "";
+  const otherSummary = r.otherOutUnit > 0
+    ? ` | 📌 Ghi nhận riêng ${fmtNum(r.otherOutUnit, 0)} ĐVT (${fmtNum(r.otherOutKg)} kg) xuất hỗ trợ / đổi lỗi không HĐ.`
+    : "";
+
+  if (!r.salesRes.hasData && r.invRes.hasData) {
+    banner.className = "recon-banner";
+    statusEl.textContent = `✅ Đã tổng hợp từ Sổ Vật Tư (${fmtNum(r.invRes.expCommercialUnit, 0)} ĐVT xuất bán có HĐ)${otherSummary}`;
+  } else if (r.salesRes.hasData && !r.invRes.hasData) {
+    banner.className = "recon-banner warn";
+    statusEl.textContent = `ℹ️ Đã tổng hợp ${fmtNum(r.salesRes.totalNetUnit, 0)} ĐVT (${fmtNum(r.expKg)} kg) từ Sổ Bán Hàng${retNote}. ${r.openKg > 0 ? "" : "Nạp thêm Sổ Vật Tư ở mục 1B (hoặc gõ Tồn đầu kỳ ở mục 2) để tính đúng Tồn trữ cuối kỳ."}`;
+  } else if (Math.abs(r.commercialDiffUnit) < 0.001) {
+    banner.className = "recon-banner";
+    statusEl.textContent = `✅ ĐỐI SOÁT CHÉO KHỚP 100% — Mã ${r.sku}: Sổ Bán Hàng (${fmtNum(r.salesRes.totalNetUnit, 0)} ĐVT${retNote}) = Sổ Vật Tư xuất bán (${fmtNum(r.invRes.expCommercialUnit, 0)} ĐVT)${otherSummary}`;
+  } else {
+    banner.className = "recon-banner error";
+    statusEl.textContent = `⚠️ CHÊNH LỆCH XUẤT BÁN CÓ HÓA ĐƠN — Sổ Bán Hàng: ${fmtNum(r.salesRes.totalNetUnit, 0)} ĐVT vs Sổ Vật Tư xuất bán: ${fmtNum(r.invRes.expCommercialUnit, 0)} ĐVT (Lệch ${fmtNum(r.commercialDiffUnit, 0)} ĐVT)${otherSummary}`;
+  }
+
+  document.getElementById("crossTableBody").innerHTML = r.crossRows.length
+    ? r.crossRows.map(cr => {
+        const diff = cr.salesUnit - cr.invUnit;
+        const ok = Math.abs(diff) < 0.001;
+        let badgeHtml = cr.isOther
+          ? `<span class="tag-other">${cr.statusBadge}</span>`
+          : (ok ? `<span class="tag-ok">Khớp 100%</span>` : `<span class="tag-warn">${cr.statusBadge || "Chênh lệch"}</span>`);
+        return `
+          <tr>
+            <td class="center"><strong>${cr.docKey}</strong></td>
+            <td class="center">${isoToVnDate(cr.date)}</td>
+            <td>${cr.buyer}</td>
+            <td class="num">${fmtNum(cr.salesUnit, 0)}</td>
+            <td class="num">${fmtNum(cr.invUnit, 0)}</td>
+            <td class="num"><strong>${cr.isOther ? "0" : fmtNum(diff, 0)}</strong></td>
+            <td class="center">${badgeHtml}</td>
+          </tr>
+        `;
+      }).join("")
+    : `<tr><td colspan="7" class="center" style="padding:16px;color:var(--muted);">Chưa có phát sinh xuất kho của mã ${r.sku} trong kỳ này.</td></tr>`;
+
+  document.getElementById("auditTableBody").innerHTML = r.invRes.auditRows.map(ar => `
+    <tr>
+      <td class="center">Dòng ${ar.excelRow}</td>
+      <td class="center">${ar.date === "-" ? "-" : isoToVnDate(ar.date)}</td>
+      <td>${ar.kho}</td>
+      <td>${ar.soHd}</td>
+      <td>${ar.dg}</td>
+      <td class="num">${ar.nhap ? fmtNum(ar.nhap, 0) : "-"}</td>
+      <td class="num">${ar.xuat ? fmtNum(ar.xuat, 0) : "-"}</td>
+      <td class="num"><strong>${fmtNum(ar.ton, 0)}</strong></td>
+      <td class="center">${
+        ar.status === "ok" ? `<span class="tag-ok">Xuất bán (HĐ)</span>`
+        : ar.status === "other" ? `<span class="tag-other">${ar.badge}</span>`
+        : `<span class="tag-skip">${ar.status === "open" ? "Đầu kỳ" : "Nội bộ"}</span>`
+      }</td>
+    </tr>
+  `).join("");
+
+  document.getElementById("periodBadge").textContent = `${r.groupTitle} • Năm ${r.reportYear} • ${r.periodText}`;
+
+  const tbody = document.getElementById("buyerTableBody");
+  let htmlRows = "";
+  let rowIdx = 0;
+
+  for (const batch of r.reportBatches) {
+    if (!batch.buyers.length) {
+      rowIdx++;
+      htmlRows += `
+        <tr>
+          <td class="center">${rowIdx}</td>
+          <td><span class="tag-other">${batch.gpnk}</span></td>
+          <td colspan="6" style="color:var(--muted);font-style:italic;">
+            Lô này chưa xuất bán trong kỳ (Tồn đầu: ${fmtNum(batch.periodOpenKg)} kg | Nhập kỳ này: ${fmtNum(batch.periodImpKg)} kg | Tồn cuối: ${fmtNum(batch.periodCloseKg)} kg)
+          </td>
+        </tr>
+      `;
+    } else {
+      for (const b of batch.buyers) {
+        rowIdx++;
+        htmlRows += `
+          <tr>
+            <td class="center">${rowIdx}</td>
+            <td><span class="tag-other">${batch.gpnk}</span></td>
+            <td><strong>${b.name}</strong></td>
+            <td><input type="text" value="${b.mst}" onchange="updateBuyerField('${batch.id}', '${b.name.replace(/'/g, "\\'")}', 'mst', this.value)" /></td>
+            <td>${b.invs.join(", ")}</td>
+            <td class="num">${fmtNum(b.unit, 0)}</td>
+            <td class="num"><strong>${fmtNum(b.kg)}</strong></td>
+            <td>
+              <select onchange="updateBuyerField('${batch.id}', '${b.name.replace(/'/g, "\\'")}', 'purpose', this.value)">
+                <option ${b.purpose === "Kinh doanh" ? "selected" : ""}>Kinh doanh</option>
+                <option ${b.purpose === "Sử dụng" ? "selected" : ""}>Sử dụng</option>
+                <option ${b.purpose === "(48) mục đích sử dụng khác" ? "selected" : ""}>(48) mục đích sử dụng khác</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }
+    }
+  }
+
+  tbody.innerHTML = htmlRows || `<tr><td colspan="8" class="center" style="padding:20px;color:var(--muted);">Không có dữ liệu hiển thị.</td></tr>`;
+  document.getElementById("exportBtn").disabled = false;
+}
+
+function quickAddMissingImport(date, kg, tkhq, tkNum = "") {
+  document.getElementById("newImpDate").value = date;
+  document.getElementById("newImpKg").value = kg;
+
+  const matchedPreset = tkNum
+    ? sharedGpnkCache.find(p => p.tkhq.includes(tkNum))
+    : null;
+
+  if (matchedPreset) {
+    document.getElementById("newGpnkNo").value = matchedPreset.gpnk;
+    document.getElementById("newTkhqNo").value = matchedPreset.tkhq;
+  } else {
+    document.getElementById("newTkhqNo").value = tkhq;
+    document.getElementById("newGpnkNo").focus();
+  }
+}
+
+function updateBuyerField(batchId, buyerName, field, val) {
+  if (!currentResult) return;
+  const batch = currentResult.reportBatches.find(x => x.id === batchId);
+  if (!batch) return;
+  const buyer = batch.buyers.find(x => x.name === buyerName);
+  if (buyer) buyer[field] = val;
+}
+
+function toggleAuditDrawer() {
+  document.getElementById("auditDrawer").classList.toggle("open");
+}
+
+function switchAuditTab(tab) {
+  document.getElementById("tabCrossBtn").classList.toggle("active", tab === "cross");
+  document.getElementById("tabLedgerBtn").classList.toggle("active", tab === "ledger");
+  document.getElementById("crossTableWrap").style.display = tab === "cross" ? "block" : "none";
+  document.getElementById("ledgerTableWrap").style.display = tab === "ledger" ? "block" : "none";
+}
+
+// ===== MODAL QUẢN LÝ DANH MỤC MÃ HÀNG =====
+function renderChemRows(chemList = [{ name: "", cas: "", pct: "" }]) {
+  const container = document.getElementById("chemRowsContainer");
+  container.innerHTML = chemList.map(c => `
+    <div class="chem-row">
+      <input type="text" class="c-name" placeholder="Tên hóa chất KSĐB (VD: Vinyl benzene)" value="${c.name || ""}" />
+      <input type="text" class="c-cas" placeholder="Mã CAS (VD: 100-42-5)" value="${c.cas || ""}" />
+      <input type="text" class="c-pct" placeholder="Hàm lượng % (VD: ≥10-≤24)" value="${c.pct || ""}" />
+      <button type="button" class="btn-del-chem" title="Xóa dòng chất này" onclick="removeChemRow(this)" ${chemList.length === 1 ? "disabled style='opacity:0.4;cursor:not-allowed'" : ""}>✕</button>
+    </div>
+  `).join("");
+}
+
+function addChemRow(name = "", cas = "", pct = "") {
+  const current = collectChemRows();
+  current.push({ name, cas, pct });
+  renderChemRows(current);
+}
+
+function removeChemRow(btn) {
+  const rows = document.querySelectorAll("#chemRowsContainer .chem-row");
+  if (rows.length <= 1) return;
+  btn.closest(".chem-row").remove();
+}
+
+function collectChemRows() {
+  const list = [];
+  document.querySelectorAll("#chemRowsContainer .chem-row").forEach(r => {
+    list.push({
+      name: r.querySelector(".c-name").value.trim(),
+      cas: r.querySelector(".c-cas").value.trim(),
+      pct: r.querySelector(".c-pct").value.trim()
+    });
+  });
+  return list;
+}
+
+function resetModalForm() {
+  document.getElementById("mSku").value = "";
+  document.getElementById("mTradeName").value = "";
+  document.getElementById("mGroup").value = "NHÓM 1";
+  document.getElementById("mFactor").value = "1";
+  document.getElementById("mQuota").value = "5000";
+  document.getElementById("btnDeleteEditingSku").style.display = "none";
+  renderChemRows([{ name: "", cas: "", pct: "" }]);
+}
+
+function openSkuModal() {
+  resetModalForm();
+  renderSkuCatalogTable();
+  document.getElementById("skuModal").classList.add("open");
+}
+
+function closeSkuModal() {
+  document.getElementById("skuModal").classList.remove("open");
+}
+
+function formatMultiChemDisplay(it) {
+  const names = String(it.chemName || "").split("\n");
+  const cases = String(it.cas || "").split("\n");
+  const pcts = String(it.pct || "").split("\n");
+  return names.map((n, i) => {
+    const c = cases[i] && cases[i] !== "-" ? `CAS: ${cases[i]}` : "";
+    const p = pcts[i] && pcts[i] !== "-" ? `HL: ${pcts[i]}%` : "";
+    const meta = [c, p].filter(Boolean).join(" | ");
+    return `<div><strong>${n}</strong>${meta ? ` <span style="color:#475569;font-size:12px;">(${meta})</span>` : ""}</div>`;
+  }).join("");
+}
+
+function renderSkuCatalogTable() {
+  const list = Object.values(skuCatalog);
+  document.getElementById("skuCatalogTableBody").innerHTML = list.length
+    ? list.map(it => {
+        const safeSku = it.sku.replace(/'/g, "\\'");
+        return `
+          <tr>
+            <td><strong>${it.sku}</strong></td>
+            <td>${it.tradeName}</td>
+            <td>${formatMultiChemDisplay(it)}</td>
+            <td class="center">${it.groupTitle}</td>
+            <td class="num">${fmtNum(it.factor)} kg</td>
+            <td class="num">${fmtNum(it.quota, 0)}</td>
+            <td class="center" style="white-space:nowrap;">
+              <button type="button" class="btn-outline" onclick="editSkuInModal('${safeSku}')">Sửa</button>
+              <button type="button" class="btn-danger-outline" style="margin-left:4px;" onclick="deleteCustomSku('${safeSku}')">Xóa</button>
+            </td>
+          </tr>
+        `;
+      }).join("")
+    : `<tr><td colspan="7" class="center" style="padding:18px;color:var(--muted);">Danh mục đang trống. Hãy nhập mã hàng mới ở khung trên.</td></tr>`;
+}
+
+function editSkuInModal(sku) {
+  const it = skuCatalog[sku];
+  if (!it) return;
+  document.getElementById("mSku").value = it.sku;
+  document.getElementById("mTradeName").value = it.tradeName;
+  document.getElementById("mGroup").value = it.groupTitle;
+  document.getElementById("mFactor").value = it.factor;
+  document.getElementById("mQuota").value = it.quota;
+  document.getElementById("btnDeleteEditingSku").style.display = "inline-flex";
+
+  const names = String(it.chemName || "").split("\n");
+  const cases = String(it.cas || "").split("\n");
+  const pcts = String(it.pct || "").split("\n");
+  const maxLen = Math.max(names.length, cases.length, pcts.length, 1);
+  const chemList = [];
+  for (let i = 0; i < maxLen; i++) {
+    chemList.push({
+      name: (names[i] || "").trim(),
+      cas: (cases[i] || "").trim(),
+      pct: (pcts[i] || "").trim()
+    });
+  }
+  renderChemRows(chemList);
+}
+
+function saveCustomSku() {
+  const sku = document.getElementById("mSku").value.trim().toUpperCase();
+  if (!sku) { alert("Vui lòng nhập Mã nhận diện (VD: 1050, A656...)"); return; }
+
+  const tradeName = document.getElementById("mTradeName").value.trim() || sku;
+  const factor = parseFloat(document.getElementById("mFactor").value) || 1;
+  const quota = parseFloat(document.getElementById("mQuota").value) || 5000;
+
+  const validChems = collectChemRows().filter(c => c.name || c.cas || c.pct);
+  const chemName = validChems.length ? validChems.map(c => c.name || "-").join("\n") : "Hóa chất KSĐB";
+  const cas = validChems.length ? validChems.map(c => c.cas || "-").join("\n") : "-";
+  const pct = validChems.length ? validChems.map(c => c.pct || "-").join("\n") : "-";
+
+  skuCatalog[sku] = {
+    sku,
+    label: `${sku} (${tradeName.slice(0, 34)})`,
+    tradeName,
+    chemName,
+    cas,
+    pct,
+    groupTitle: document.getElementById("mGroup").value,
+    gpkd: "312/GCNĐĐK-SCT",
+    quota,
+    factor,
+    batches: skuCatalog[sku]?.batches || []
+  };
+
+  persistSkuCatalog();
+  populateSkuDropdown(sku);
+  renderSkuCatalogTable();
+  document.getElementById("btnDeleteEditingSku").style.display = "inline-flex";
+  alert(`Đã lưu mã hàng "${sku}" vào danh mục!`);
+}
+
+function deleteCustomSku(sku) {
+  if (!skuCatalog[sku]) return;
+  if (!confirm(`Bạn có chắc muốn xóa mã hàng "${sku}" khỏi danh mục?`)) return;
+  delete skuCatalog[sku];
+  persistSkuCatalog();
+  populateSkuDropdown();
+  renderSkuCatalogTable();
+  if (document.getElementById("mSku").value.trim().toUpperCase() === sku) {
+    resetModalForm();
+  }
+}
+
+function deleteEditingSkuFromForm() {
+  const sku = document.getElementById("mSku").value.trim().toUpperCase();
+  if (sku) deleteCustomSku(sku);
+}
+
+function exportCatalogBackup() {
+  const blob = new Blob([JSON.stringify(skuCatalog, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `Danh_Muc_Ma_Hang_Va_GPNK_NGLM.json`;
+  a.click();
+}
+
+async function importCatalogBackup(fileList) {
+  if (!fileList || !fileList.length) return;
+  try {
+    const txt = await fileList[0].text();
+    const imported = JSON.parse(txt);
+    for (const [k, v] of Object.entries(imported)) {
+      skuCatalog[k] = v;
+    }
+    persistSkuCatalog();
+    populateSkuDropdown();
+    renderSkuCatalogTable();
+    alert("Đã nạp thành công danh mục mã hàng & sổ GPNK từ file sao lưu!");
+  } catch (e) {
+    alert("File sao lưu không hợp lệ: " + e.message);
+  }
+}
+
+// ===== XUẤT FILE EXCEL BÁO CÁO CHUẨN KHỔ A4 NGANG (CHỮ TO, RÕ NÉT) =====
+async function downloadOfficialExcel() {
+  if (!currentResult) return;
+  const rep = currentResult;
+  const wb = new ExcelJS.Workbook();
+  const thin = { style: "thin", color: { argb: "FF475569" } };
+  const borderAll = { top: thin, left: thin, bottom: thin, right: thin };
+
+  const safeSku = rep.sku.replace(/[\\\/\?\*\[\]]/g, "_").slice(0, 20);
+  const ws = wb.addWorksheet(`Bao_Cao_${safeSku}`, {
+    pageSetup: {
+      paperSize: 9, // A4
+      orientation: "landscape",
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      horizontalCentered: true,
+      printTitlesRow: "8:9",
+      margins: {
+        left: 0.2, right: 0.2,
+        top: 0.28, bottom: 0.28,
+        header: 0.1, footer: 0.1
+      }
+    }
+  });
+
+  ws.mergeCells("A1:S1"); ws.getCell("A1").value = "BÁO CÁO";
+  ws.getCell("A1").font = { name: "Times New Roman", size: 15, bold: true };
+  ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(1).height = 24;
+
+  ws.mergeCells("A2:S2");
+  ws.getCell("A2").value = `TÌNH HÌNH NHẬP KHẨU, MUA BÁN VÀ TỒN TRỮ HÓA CHẤT CẦN KIỂM SOÁT ĐẶC BIỆT ${rep.groupTitle} NĂM ${rep.reportYear}`;
+  ws.getCell("A2").font = { name: "Times New Roman", size: 13.5, bold: true };
+  ws.getCell("A2").alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(2).height = 22;
+
+  ws.mergeCells("A3:S3"); ws.getCell("A3").value = rep.periodText;
+  ws.getCell("A3").font = { name: "Times New Roman", size: 11.5, italic: true };
+  ws.getCell("A3").alignment = { horizontal: "center", vertical: "middle" };
+  ws.getRow(3).height = 20;
+
+  ws.mergeCells("A4:S4"); ws.getCell("A4").value = "Tên công ty: CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI NGUYỄN GIA LIÊN MINH";
+  ws.mergeCells("A5:S5"); ws.getCell("A5").value = "Trụ sở chính: 84/7 Tân Sơn Nhì, Phường Tân Sơn Nhì, Thành Phố Hồ Chí Minh, Việt Nam.                  MST: 0317110114";
+  ws.mergeCells("A6:S6"); ws.getCell("A6").value = "Địa điểm kinh doanh: 84/7 Tân Sơn Nhì, Phường Tân Sơn Nhì, Thành Phố Hồ Chí Minh, Việt Nam.";
+  ws.mergeCells("A7:S7"); ws.getCell("A7").value = `Địa điểm tồn chứa hóa chất: ${WAREHOUSE_OFFICIAL_LINE}`;
+  [4, 5, 6, 7].forEach(r => {
+    ws.getCell(`A${r}`).font = { name: "Times New Roman", size: 11.5, bold: r === 4 };
+    ws.getRow(r).height = 19;
+  });
+
+  ws.mergeCells("A8:A9"); ws.getCell("A8").value = "STT";
+  ws.mergeCells("B8:G8"); ws.getCell("B8").value = "THÔNG TIN HOÁ CHẤT";
+  ws.mergeCells("H8:M8"); ws.getCell("H8").value = "GIẤY PHÉP NHẬP KHẨU & TỒN TRỮ";
+  ws.mergeCells("N8:R8"); ws.getCell("N8").value = "BÁN RA";
+  ws.mergeCells("S8:S9"); ws.getCell("S8").value = "Ghi chú";
+
+  const subHeaders = [
+    "", "Tên thương mại", "Tên hóa chất cần KSDB", "Mã CAS", "Hàm lượng (%)",
+    "Giấy phép kinh doanh", "Quy mô kinh doanh (kg/năm)",
+    "Số GPNK", "TKHQ", "Tồn đầu kỳ (kg)", "Khối lượng nhập khẩu (kg)",
+    "Khối lượng đã bán (kg)", "Tồn trữ tại thời điểm báo cáo (kg)",
+    "Bán cho", "MST", "Số hóa đơn", "Khối lượng bán (kg)", "Mục đích sử dụng của bên mua", ""
+  ];
+  subHeaders.forEach((h, idx) => { if (h) ws.getCell(9, idx + 1).value = h; });
+
+  ws.getRow(8).height = 26;
+  ws.getRow(9).height = 38;
+  [8, 9].forEach(r => {
+    for (let c = 1; c <= 19; c++) {
+      const cell = ws.getCell(r, c);
+      cell.font = { name: "Times New Roman", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF16325C" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.border = borderAll;
+    }
+  });
+
+  let curR = 10;
+  const batchesToExport = rep.reportBatches;
+  const chemLineCount = String(rep.chemName || "").split("\n").length;
+
+  batchesToExport.forEach((batch, bIdx) => {
+    const startR = curR;
+    const rowCount = Math.max(batch.buyers.length, 1);
+    const endR = startR + rowCount - 1;
+
+    for (let i = 0; i < rowCount; i++) {
+      const r = startR + i;
+      const b = batch.buyers[i];
+      if (b) {
+        ws.getCell(r, 14).value = b.name;
+        ws.getCell(r, 15).value = String(b.mst || "");
+        ws.getCell(r, 15).numFmt = "@";
+        ws.getCell(r, 16).value = b.invs.join(", ");
+        ws.getCell(r, 16).numFmt = "@";
+        ws.getCell(r, 17).value = b.kg;
+        ws.getCell(r, 17).numFmt = "#,##0.00";
+        ws.getCell(r, 18).value = b.purpose;
+      } else {
+        ws.getCell(r, 14).value = "Chưa xuất bán lô này trong kỳ";
+        ws.getCell(r, 17).value = 0;
+        ws.getCell(r, 17).numFmt = "#,##0.00";
+      }
+
+      const nameLines = b ? Math.ceil(b.name.length / 26) : 1;
+      const invLines = b ? Math.ceil(b.invs.join(", ").length / 15) : 1;
+      const minBlockH = rowCount === 1 ? Math.max(44, chemLineCount * 20) : 28;
+      ws.getRow(r).height = Math.max(minBlockH, nameLines * 18, invLines * 18);
+
+      for (let c = 1; c <= 19; c++) {
+        const cell = ws.getCell(r, c);
+        cell.font = { name: "Times New Roman", size: 11, italic: !b && c === 14 };
+        cell.border = borderAll;
+        cell.alignment = {
+          horizontal: [1, 4, 5, 6, 8, 9, 15, 16].includes(c) ? "center" : ([7, 10, 11, 12, 13, 17].includes(c) ? "right" : "left"),
+          vertical: "middle",
+          wrapText: true
+        };
+      }
+    }
+
+    if (endR > startR) {
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 19].forEach(c => ws.mergeCells(startR, c, endR, c));
+    }
+
+    ws.getCell(startR, 1).value = bIdx + 1;
+    ws.getCell(startR, 2).value = rep.tradeName;
+    ws.getCell(startR, 3).value = rep.chemName;
+    ws.getCell(startR, 4).value = rep.cas;
+    ws.getCell(startR, 5).value = rep.pct;
+    ws.getCell(startR, 6).value = rep.gpkd;
+    ws.getCell(startR, 7).value = rep.quota; ws.getCell(startR, 7).numFmt = "#,##0";
+    ws.getCell(startR, 8).value = batch.gpnk;
+    ws.getCell(startR, 9).value = batch.tkhq;
+    ws.getCell(startR, 10).value = batch.periodOpenKg; ws.getCell(startR, 10).numFmt = "#,##0.00";
+    ws.getCell(startR, 11).value = batch.periodImpKg; ws.getCell(startR, 11).numFmt = "#,##0.00";
+    ws.getCell(startR, 12).value = { formula: `SUM(Q${startR}:Q${endR})`, result: batch.periodSoldKg }; ws.getCell(startR, 12).numFmt = "#,##0.00";
+
+    const otherKgInBatch = batch.periodOtherOutKg || 0;
+    ws.getCell(startR, 13).value = otherKgInBatch > 0
+      ? { formula: `J${startR}+K${startR}-L${startR}-${otherKgInBatch}`, result: batch.periodCloseKg }
+      : { formula: `J${startR}+K${startR}-L${startR}`, result: batch.periodCloseKg };
+    ws.getCell(startR, 13).numFmt = "#,##0.00";
+
+    let noteLines = [];
+    if (bIdx === 0) {
+      noteLines.push(`Còn được phép kinh doanh năm ${rep.reportYear}: ${fmtNum(rep.remQuota, 0)} kg.`);
+    }
+    if (batch.returnNotes && batch.returnNotes.length) {
+      noteLines.push(`Đã trừ hàng bán trả lại: ${batch.returnNotes.join("; ")}.`);
+    }
+    if (otherKgInBatch > 0 && batch.otherNotes.length) {
+      noteLines.push(`Xuất kho khác không HĐ đã trừ tồn: ${batch.otherNotes.join("; ")}.`);
+    }
+    ws.getCell(startR, 19).value = noteLines.join("\n");
+
+    curR = endR + 1;
+  });
+
+  if (batchesToExport.length > 1) {
+    const sumR = curR;
+    ws.mergeCells(sumR, 1, sumR, 9);
+    ws.getCell(sumR, 1).value = `TỔNG CỘNG MÃ ${rep.sku}`;
+    ws.getCell(sumR, 10).value = rep.openKg;
+    ws.getCell(sumR, 11).value = rep.impKg;
+    ws.getCell(sumR, 12).value = rep.expKg;
+    ws.getCell(sumR, 13).value = rep.closeKg;
+    ws.getCell(sumR, 17).value = rep.expKg;
+    ws.getRow(sumR).height = 24;
+
+    for (let c = 1; c <= 19; c++) {
+      const cell = ws.getCell(sumR, c);
+      cell.font = { name: "Times New Roman", size: 11, bold: true };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
+      cell.border = borderAll;
+      if ([10, 11, 12, 13, 17].includes(c)) {
+        cell.numFmt = "#,##0.00";
+        cell.alignment = { horizontal: "right", vertical: "middle" };
+      } else {
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      }
+    }
+    curR++;
+  }
+
+  const sigR = curR + 2;
+  ws.mergeCells(sigR, 14, sigR, 19);
+  ws.getCell(sigR, 14).value = "CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI NGUYỄN GIA LIÊN MINH";
+  ws.getCell(sigR, 14).font = { name: "Times New Roman", size: 11.5, bold: true };
+  ws.getCell(sigR, 14).alignment = { horizontal: "center" };
+
+  ws.mergeCells(sigR + 4, 14, sigR + 4, 19);
+  ws.getCell(sigR + 4, 14).value = "ĐẶNG NGỌC DỊ THẢO";
+  ws.getCell(sigR + 4, 14).font = { name: "Times New Roman", size: 11.5, bold: true };
+  ws.getCell(sigR + 4, 14).alignment = { horizontal: "center" };
+
+  [4.5, 17, 13.5, 9.5, 9, 12.5, 10.5, 15, 15, 10.5, 10.5, 10.5, 10.5, 24, 12.5, 13.5, 10, 15.5, 19].forEach((w, idx) => {
+    ws.getColumn(idx + 1).width = w;
+  });
+
+  const outBuf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([outBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const mSuffix = rep.selectedMonth && rep.selectedMonth !== "ALL"
+    ? `_T${rep.selectedMonth.replace("-", "_")}`
+    : `_${rep.reportYear}`;
+  a.download = `BAO_CAO_${safeSku}${mSuffix}_A4.xlsx`;
+  a.click();
+}
+
+populateSkuDropdown("1050");
+</script>
+</body>
+</html>
