@@ -11,7 +11,7 @@ window.WORKSPACE_COMPANIES = {
     brandTag: "CATNGUYENAUTOPAINT",
     mst: "0319353151",
     address: "Số 47/3 Trường Chinh, Phường Bảy Hiền, Thành phố Hồ Chí Minh, Việt Nam",
-    warehouse: "Kho Công ty TNHH Sơn Ô Tô Cát Nguyên - Số 47/3 Trường Chinh, Phường Bảy Hiền, TP. Hồ Chí Minh, Việt Nam.",
+    warehouse: "Kho Vietchem - Một phần Lô H9A-H10, Đường N3, KCN Nam Thuận, Xã Mỹ Hạnh, Tỉnh Tây Ninh, Việt Nam.",
     signer: "NGƯỜI ĐẠI DIỆN CÁT NGUYÊN",
     storagePrefix: "CN",
     logo: window.WS_LOGO_CN,
