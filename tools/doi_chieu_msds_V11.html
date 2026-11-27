@@ -48,7 +48,10 @@ dialog::backdrop{background:#000a}
 .portal-entity img{height:23px;width:auto;max-width:88px;object-fit:contain}.portal-entity strong{color:var(--gold)}
 .portal-switch{margin-left:auto;display:flex;align-items:center;gap:8px}.portal-switch label{margin:0;white-space:nowrap}
 .portal-switch select{width:auto;padding:3px 6px;border-color:#a78228}
-@media print{.portal-bar{display:none!important}
+#cropSurface{position:relative;width:fit-content;max-width:100%;margin:auto;line-height:0}
+#cropCanvas{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
+#cropBox{position:absolute;pointer-events:none;border:2px solid #b38918;background:#f2ce6940;box-sizing:border-box}
+@media print{#cropDialog{display:none!important}.portal-bar{display:none!important}
   @page{size:A4 portrait;margin:13mm}
   html,body{background:#fff!important;margin:0}
   body>header,main,.reportControls{display:none!important}
@@ -83,12 +86,24 @@ dialog::backdrop{background:#000a}
 <section><h2>Phiếu an toàn hóa chất</h2>
 <label for="pdfs">Chọn một hoặc nhiều MSDS/SDS PDF</label><input id="pdfs" type="file" accept=".pdf" multiple>
 <p class="muted">PDF có lớp văn bản được đọc tại trình duyệt. Với bản scan hoặc bảng trích thiếu, dán văn bản Mục 3 hoặc nhập từng dòng.</p>
-<button id="manual">Thêm sản phẩm thủ công</button><p id="pdfStatus" role="status"></p></section>
+<div class="bar"><button id="manual">Thêm sản phẩm thủ công</button><button id="cropPdf" class="primary">Cắt bảng trực tiếp từ PDF</button><button id="attachImage">Chèn ảnh bảng thành phần</button></div><input id="cropPdfFile" type="file" accept=".pdf,application/pdf" hidden><input id="compositionImage" type="file" accept="image/png,image/jpeg,image/webp" hidden><p id="pdfStatus" role="status"></p></section>
 </div>
 <section id="editor" hidden><h2>Kiểm tra thành phần</h2>
 <label for="product">Hồ sơ đang xem</label><select id="product"></select>
 <div class="grid"><div><label for="code">Mã sản phẩm</label><input id="code"></div><div><label for="name">Tên sản phẩm</label><input id="name"></div><div><label for="invoice">Tên trên hóa đơn</label><input id="invoice"></div></div>
-<details><summary>Văn bản Mục 3</summary><label for="sectionText">Chỉnh hoặc dán nguyên văn Mục 3</label><textarea id="sectionText"></textarea>
+<details id="mappingPanel" hidden><summary>Chọn cột thủ công</summary>
+<p class="muted">Chọn phạm vi từ dòng đầu đến dòng cuối của bảng. Chọn một dòng mẫu có ba cột cần lấy, rồi gán tên chất, CAS và hàm lượng bên dưới.</p>
+<div class="grid"><label>Từ dòng<select id="mapStart"></select></label><label>Đến dòng<select id="mapEnd"></select></label><label>Dòng mẫu để gán cột<select id="mapSample"></select></label></div>
+<div class="grid"><label>Tên chất<select id="mapName"></select></label><label>CAS<select id="mapCas"></select></label><label>Hàm lượng<select id="mapPct"></select></label></div>
+<button id="applyMapping">Dùng các cột đã chọn</button><p id="mappingStatus" role="status"></p>
+</details>
+<div id="imagePanel" hidden>
+<p><strong>Ảnh bảng thành phần</strong></p>
+<img id="imagePreview" alt="Ảnh Mục 3 của hồ sơ đang xem" style="max-width:100%;max-height:380px;object-fit:contain">
+<div class="bar"><button id="readImage">Đọc chữ từ ảnh (OCR)</button><button id="removeImage">Gỡ ảnh</button></div>
+<p id="imageStatus" role="status"></p>
+</div>
+<details id="sectionDetails"><summary>Văn bản Mục 3</summary><label for="sectionText">Chỉnh hoặc dán nguyên văn Mục 3</label><textarea id="sectionText"></textarea>
 <div class="bar"><button id="parse">Trích lại từ văn bản</button></div></details>
 <p id="note" class="notice" role="status"></p>
 <div class="scroll"><table><thead><tr><th>Thành phần</th><th>CAS</th><th>Hàm lượng (%)</th><th>Danh mục / căn cứ khớp</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -98,6 +113,13 @@ dialog::backdrop{background:#000a}
 <section><h2>Kết quả đối chiếu</h2><p class="muted">Các cột kinh doanh và nhập khẩu là tín hiệu rà soát theo quy tắc VBA gốc. Cần kiểm tra văn bản áp dụng, điều kiện của hỗn hợp và ngoại lệ trước khi dùng cho hồ sơ.</p>
 <div id="summary" role="status"></div><div class="bar"><button id="export" class="primary" disabled>Xuất Excel</button><button id="customerReport" disabled>Báo cáo khách hàng</button></div></section>
 </main>
+<dialog id="cropDialog" aria-labelledby="cropTitle">
+<h2 id="cropTitle">Cắt bảng thành phần từ PDF</h2>
+<p>Kéo khung quanh bảng Mục 3, rồi bấm Dùng vùng cắt.</p>
+<div class="bar"><button id="cropPrev">Trang trước</button><button id="cropNext">Trang sau</button><button id="cropUse" class="primary" disabled>Dùng vùng cắt</button><button id="cropClose">Đóng</button></div>
+<p id="cropStatus" role="status"></p>
+<div id="cropSurface" hidden><canvas id="cropCanvas"></canvas><div id="cropBox" hidden></div></div>
+</dialog>
 <dialog id="reportDialog" aria-labelledby="reportDialogTitle">
   <div class="reportControls">
     <h2 id="reportDialogTitle">Báo cáo khách hàng</h2>
@@ -329,11 +351,160 @@ function pdfPageText(lines) {
   }
   return output.join('\n');
 }
+function readQuantityTable(pageLines) {
+  let section = false, columns, row;
+  const rows = [];
+  function finish() {
+    if (!row) return;
+    const pct = row.qty.join(' ').replace(/\s+/g,' ');
+    const cas = casList(row.ids.join(' ').match(/\bCAS\s*:?\s*(\d{2,7}\s*-\s*\d{2}\s*-\s*\d)\b/i)?.[1])[0];
+    rows.push({ingredient:row.name.join(' '),cas,pct:pctRange(pct)?pct:''});
+    row = null;
+  }
+  for (const lines of pageLines) for (const [,items] of [...lines].sort((a,b)=>b[0]-a[0])) {
+    const cells = [...items].sort((a,b)=>a.transform[4]-b.transform[4]);
+    const txt = cells.map(item=>item.str.trim()).join(' ');
+    if (/^section\s*3\b/i.test(txt)) section=true;
+    if (/^section\s*4\b/i.test(txt) && section) {finish();return {columns,rows};}
+    if (!section) continue;
+    const header = [/^(qty|quantity)$/i,/^name$/i,/^ident\.?\s*number$/i,/^classification$/i]
+      .map(pattern=>cells.find(item=>pattern.test(item.str.trim()))?.transform[4]);
+    if (header.every((x,i)=>x!==undefined && (!i||x>header[i-1]))) {columns=header;continue;}
+    if (!columns) continue;
+    const [qtyX,nameX,idX,classX]=columns.map(x=>x-3);
+    const inColumn=(lo,hi)=>cells.filter(item=>item.transform[4]>=lo&&item.transform[4]<hi).map(item=>item.str.trim()).join(' ');
+    const qty=inColumn(qtyX,nameX), name=inColumn(nameX,idX), ids=inColumn(idX,classX);
+    if (qty && name && /^(?:[>≥]|\d)/.test(qty) && (!row || pctRange(row.qty.join(' ')))) {finish();row={qty:[],name:[],ids:[]};}
+    if (!row) continue;
+    if (/^[\d.,%<>=≤≥\s–-]+$/.test(qty)) row.qty.push(qty);
+    if (name) row.name.push(name);
+    if (ids) row.ids.push(ids);
+  }
+  finish();
+  return {columns,rows};
+}
+const columnLabels = {
+  name:/^(?:ingredient(?: name)?s?|chemical name|substance(?: name)?|name|tên (?:chất|hóa chất|hóa học)(?:\s*\/\s*phân loại)?|thành phần)$/i,
+  cas:/^(?:cas(?:\s*(?:no\.?|number|#))?|(?:mã(?: số)?|số) cas|nhận dạng|ident\.? number|identifiers?)$/i,
+  pct:/^(?:qty|quantity|concentration|content|weight|hàm lượng|nồng độ|%|w\/w)(?:\s*\(%\))?$/i
+};
+function compositionLines(pages,wholeDocument=false) {
+  const lines=[];
+  let inSection=wholeDocument;
+  for (const [index,page] of pages.entries()) {
+    for (const [,items] of [...page].sort((a,b)=>b[0]-a[0])) {
+      const cells=[...items].sort((a,b)=>a.transform[4]-b.transform[4]).map(item=>({x:item.transform[4],text:item.str.trim()}));
+      const text=cells.map(cell=>cell.text).join(' ');
+      if (!wholeDocument && /^(?:(?:section|mục|phần)\s*4\b|4\s*[.:)\-]?\s*(?:first[ -]aid|sơ cứu|biện pháp (?:sơ|cấp) cứu))/i.test(text) && inSection) return lines;
+      if (!wholeDocument && /^(?:(?:section|mục|phần)\s*3\b|3\s*[.:)\-]?\s*(?:composition|thành phần|thông tin về thành phần))/i.test(text)) {inSection=true;continue;}
+      if (inSection) lines.push({cells,page:index+1});
+    }
+  }
+  return lines;
+}
+function layoutFor(lines) {
+  const roles=['name','cas','pct'];
+  let best=null, bestScore=-1;
+  for (const [index,line] of lines.entries()) {
+    const found=roles.map(role=>line.cells.findIndex(cell=>columnLabels[role].test(cell.text)));
+    const score=found.filter(n=>n>=0).length;
+    if (line.cells.length>=3 && score>bestScore && score>=2) {
+      best={index,columns:line.cells,found};
+      bestScore=score;
+    }
+  }
+  if (best) return best;
+  // Offer the positions from a candidate ingredient row when header labels are unfamiliar.
+  const row=lines.find(line=>line.cells.length>=3 && line.cells.some(cell=>casList(cell.text).length));
+  return row ? {index:-1,columns:row.cells,found:[-1,-1,-1]} : null;
+}
+function readNameClassificationRows(lines,layout,selected) {
+  const header=selected.map(i=>layout.columns[i].x);
+  const data=[];
+  for (const line of lines.slice(layout.index+1)) {
+    const text=line.cells.map(cell=>cell.text).join(' ');
+    if (/^(?:thông tin khác|giới hạn nồng độ cụ thể|để biết thêm|specific concentration limits)(?:[:\s]|$)/i.test(text) ||
+        /giới hạn nồng độ cụ thể/i.test(text) && /nhận dạng/i.test(text)) break;
+    data.push(line);
+  }
+  // Centered headers do not mark the left edge of their columns.
+  const casCells=data.flatMap(line=>line.cells).filter(cell=>cell.x<header[0] && casList(cell.text).length);
+  if (!casCells.length) return [];
+  const casRight=Math.max(...casCells.map(cell=>cell.x));
+  const pctLeft=header[2]-Math.max(12,(header[2]-header[1])*0.17);
+  const candidates=data.flatMap(line=>line.cells).filter(cell=>cell.x>casRight+5 && cell.x<pctLeft);
+  if (!candidates.length) return [];
+  const nameLeft=Math.min(...candidates.map(cell=>cell.x))-3;
+  const rows=[];
+  let row=null;
+  function finish() {
+    if (row && (row.ingredient || row.cas)) rows.push({...row,pct:row.pct.join(' ')});
+    row=null;
+  }
+  for (const {cells,page} of data) {
+    const name=cells.filter(cell=>cell.x>=nameLeft && cell.x<pctLeft).map(cell=>cell.text).join(' ');
+    const ids=cells.filter(cell=>cell.x<nameLeft).map(cell=>cell.text).join(' ');
+    const cas=casList(ids)[0];
+    const pct=cells.filter(cell=>cell.x>=pctLeft && /^[\d.,%<>=≤≥\s–—-]+$/.test(cell.text)).map(cell=>cell.text).join(' ');
+    const label=name && !/\bH\d{3}\b|^(?:Acute Tox|Aquatic |Flam\.|Eye |Skin |STOT|(?:nguy )?hiểm)$/i.test(name)
+      && !/^(?:Acute Tox|Aquatic |Flam\.|Eye |Skin |STOT|nguy hiểm)/i.test(name) ? name:'';
+    if (label && row?.cas || cas && row?.cas && row.cas!==cas) finish();
+    if (!row && (label||cas||pct)) row={ingredient:'',cas:'',pct:[],page};
+    if (!row) continue;
+    if (label) row.ingredient=[row.ingredient,label].filter(Boolean).join(' ');
+    if (cas) row.cas=cas;
+    if (pct) row.pct.push(pct);
+  }
+  finish();
+  return rows;
+}
+function readMappedRows(lines,layout,selected) {
+  const columns=layout.columns;
+  if (/phân loại/i.test(columns[selected[0]]?.text || '') && /nhận dạng|cas/i.test(columns[selected[1]]?.text || '')) {
+    return readNameClassificationRows(lines,layout,selected);
+  }
+  const rows=[];
+  let row=null;
+  function finish() {
+    if (!row) return;
+    const ids=row.ids.join(' ');
+    const labeled=ids.match(/\bCAS\s*:?\s*(\d{2,7}\s*-\s*\d{2}\s*-\s*\d)\b/i);
+    const cas=casList(labeled?.[1] ?? (/\b(?:EC|REACH|Index)\b/i.test(ids)?'':ids))[0] ?? '';
+    const pct=row.pct.join(' ').trim();
+    if (row.name.length && (cas || pct)) rows.push({ingredient:row.name.join(' '),cas,pct,page:row.page});
+    row=null;
+  }
+  for (const {cells,page} of lines.slice(layout.index+1)) {
+    const lineText=cells.map(cell=>cell.text).join(' ');
+    if (/^(?:there are no ingredients|sub codes represent|occupational exposure limits|page\s|product (?:name|code)|safety data sheet)/i.test(lineText)) {
+      if (/^(?:there are no ingredients|sub codes represent|occupational exposure limits)/i.test(lineText)) finish();
+      continue;
+    }
+    const split=columns.map(()=>[]);
+    for (const cell of cells) {
+      const index=columns.findLastIndex(column=>column.x-9<=cell.x);
+      if (index>=0) split[index].push(cell.text);
+    }
+    const [name,id,pct]=selected.map(index=>split[index].join(' '));
+    if (columnLabels.name.test(name) && columnLabels.pct.test(pct)) {finish();continue;}
+    const qtyStart=/^(?:[>≥]|\d|[<≤](?!\s*$))/.test(pct);
+    const oldPct=row?.pct.join(' ') ?? '';
+    const nextRow=name && (qtyStart && (!row || pctRange(oldPct) || /^(?:[>≥]|\d)/.test(pct) && row.ids.some(text=>casList(text).length)) ||
+      !pct && casList(id).length && !/\b(?:EC|REACH|Index)\b/i.test(id));
+    if (nextRow) {finish();row={name:[],ids:[],pct:[],page};}
+    if (!row) continue;
+    if (name) row.name.push(name);
+    if (id) row.ids.push(id);
+    if (pct && (/^[\d.,%<>=≤≥\s–—-]+$/.test(pct) || /^(?:trade secret|confidential|not disclosed)$/i.test(pct))) row.pct.push(pct);
+  }
+  finish();
+  return rows;
+}
 async function readPdf(bytes) {
   const lib = await pdfjs();
   const doc = await lib.getDocument({data:bytes,isEvalSupported:false,stopAtErrors:true}).promise;
   try {
-    const pages = [];
+    const pages = [], pageLines = [];
     for (let n = 1; n <= doc.numPages; n++) {
       const page = await doc.getPage(n);
       const content = await page.getTextContent();
@@ -345,13 +516,28 @@ async function readPdf(bytes) {
         if (!lines.has(lineY)) lines.set(lineY,[]);
         lines.get(lineY).push(item);
       }
+      pageLines.push(lines);
       pages.push(pdfPageText(lines));
     }
     const text = pages.join('\n');
     const firstPage = pages[0] ?? '';
     const name = firstPage.match(/^Product name[ \t]*:?[ \t]+([^\r\n]+)/im)?.[1]?.trim();
     const code = firstPage.match(/^Product code[ \t]*:?[ \t]+([^\r\n]+?)(?=[ \t]+(?:Date of issue|Version)\b|$)/im)?.[1]?.trim();
-    return {...section3(text),name,code};
+    const part=section3(text);
+    const table=readQuantityTable(pageLines);
+    if (table.columns && table.rows.length) {
+      part.text=table.rows.filter(row=>row.cas).map(row=>[row.ingredient,row.cas,row.pct].join(' | ')).join('\n');
+      if (table.rows.some(row=>!row.cas || !row.pct)) part.warning='Có dòng chưa đọc được CAS hoặc hàm lượng. Hãy kiểm tra Mục 3 trong PDF.';
+    }
+    const sourceLines=compositionLines(pageLines);
+    const layout=layoutFor(sourceLines);
+    const mapped=layout?.found.every(index=>index>=0) ? readMappedRows(sourceLines,layout,layout.found) : [];
+    const original=extract(part.text);
+    const sameRows=mapped.length===original.length && mapped.every((row,i)=>row.cas===original[i].cas && row.pct);
+    const combinedColumn=layout?.found[0]>=0 && /phân loại/i.test(layout.columns[layout.found[0]].text);
+    const rows=(combinedColumn && mapped.length>0) || sameRows || mapped.some(row=>row.cas && row.pct) && !original.length ? mapped : original;
+    if (combinedColumn && rows.some(row=>!row.ingredient||!pctRange(row.pct))) part.warning='Có dòng chưa đọc đủ tên hoặc nồng độ. Kiểm tra Mục 3 trong PDF.';
+    return {...part,name,code,sourceLines:sourceLines.length?sourceLines:compositionLines(pageLines,true),layout,rows};
   } finally { await doc.destroy(); }
 }
 function newProduct(source,name,text='',warning='',fileKey='') {
@@ -374,9 +560,10 @@ $('pdfs').onchange = async () => {
       if (products.some(product=>product.fileKey===digest)) continue;
       const part = await readPdf(bytes);
       newProduct(file.name,part.name || file.name.replace(/\.pdf$/i,''),part.text,part.warning,digest);
-      products[active].code = part.code || '';
+      Object.assign(products[active],{code:part.code||'',sourceLines:part.sourceLines,layout:part.layout,rows:part.rows,pdfFile:file});
     } catch (error) {
       newProduct(file.name,file.name.replace(/\.pdf$/i,''),'','Lỗi đọc PDF. '+error.message);
+      products[active].pdfFile=file;
     }
   }
   busy = false;
@@ -460,7 +647,8 @@ function drawRows(product) {
   $('rows').replaceChildren();
   product.rows.forEach((row,i)=>{
     const tr = node('tr');
-    const matchCell = node('td',match(row).label);
+    const rowLabel=()=>match(row).label+(row.page?' · trang '+row.page:'');
+    const matchCell = node('td',rowLabel());
     for (const [key,label] of [['ingredient','Thành phần'],['cas','CAS'],['pct','Hàm lượng']]) {
       const td = node('td');
       const field = node('input');
@@ -469,7 +657,7 @@ function drawRows(product) {
       field.oninput = () => {
         row[key] = field.value;
         product.checked = $('checked').checked = false;
-        matchCell.textContent = match(row).label;
+        matchCell.textContent = rowLabel();
         updateResults();
       };
       td.append(field);
@@ -483,6 +671,262 @@ function drawRows(product) {
     $('rows').append(tr);
   });
 }
+const mappingFields=['mapName','mapCas','mapPct'];
+const mappingRange=['mapStart','mapEnd','mapSample'];
+function renderMappingColumns(product, reset=false) {
+  const state=product.mapping;
+  const sample=product.sourceLines[state.sample];
+  const columns=sample.cells;
+  if (reset) state.selected=Object.values(columnLabels).map(pattern=>columns.findIndex(cell=>pattern.test(cell.text)));
+  mappingFields.forEach((key,i)=>{
+    const empty=node('option','Chọn cột');empty.value=-1;
+    $(key).replaceChildren(empty,...columns.map(({text},j)=>{
+      const option=node('option',(j+1)+'. '+text);option.value=j;return option;
+    }));
+    $(key).value=state.selected[i];
+  });
+}
+mappingRange.forEach((key,i)=>$(key).onchange=()=>{
+  const p=products[active];
+  p.mapping[['start','end','sample'][i]]=Number($(key).value);
+  if (i===2) renderMappingColumns(p,true);
+  $('mappingStatus').textContent='';
+});
+mappingFields.forEach((key,i)=>$(key).onchange=()=>{
+  products[active].mapping.selected[i]=Number($(key).value);
+});
+$('applyMapping').onclick=()=>{
+  const p=products[active];
+  const {start,end,sample,selected}=p.mapping;
+  if (start>end || sample<start || sample>end) {
+    $('mappingStatus').textContent='Dòng mẫu cần nằm trong phạm vi đã chọn.';
+    return;
+  }
+  if (selected.includes(-1) || new Set(selected).size!==3) {
+    $('mappingStatus').textContent='Chọn ba cột khác nhau.';
+    return;
+  }
+  const lines=p.sourceLines.slice(start,end+1);
+  const columns=p.sourceLines[sample].cells;
+  const isHeader=selected.every((column,i)=>Object.values(columnLabels)[i].test(columns[column].text));
+  const layout={columns,index:isHeader?sample-start:-1};
+  const rows=readMappedRows(lines,layout,selected);
+  if (!rows.length) {$('mappingStatus').textContent='Chưa đọc được hàng nào từ các cột đã chọn.';return;}
+  if (p.rows.length && !confirm('Thay bảng thành phần hiện tại bằng các dòng vừa trích?')) return;
+  p.rows=rows;
+  p.checked=false;
+  p.warning=rows.some(row=>!row.cas||!pctRange(row.pct))?'Trích xuất chưa đầy đủ. Kiểm tra các dòng còn thiếu hoặc chưa rõ.':'Đã trích '+rows.length+' dòng theo vùng đã chọn. Hãy kiểm tra với PDF.';
+  render();
+};
+let cropSession;
+const cropCanvas=$('cropCanvas');
+function cropBounds(a,b) {
+  return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),width:Math.abs(a.x-b.x),height:Math.abs(a.y-b.y)};
+}
+function cropPoint(event) {
+  const rect=cropCanvas.getBoundingClientRect();
+  return {
+    x:Math.round(Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width))*cropCanvas.width),
+    y:Math.round(Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height))*cropCanvas.height)
+  };
+}
+function drawCropBox() {
+  const box=cropSession.bounds;
+  $('cropBox').hidden=!box;
+  $('cropUse').disabled=!box || box.width<8 || box.height<8 || cropSession.busy;
+  if (!box) return;
+  Object.assign($('cropBox').style,{
+    left:100*box.x/cropCanvas.width+'%',top:100*box.y/cropCanvas.height+'%',
+    width:100*box.width/cropCanvas.width+'%',height:100*box.height/cropCanvas.height+'%'
+  });
+}
+async function showCropPage(session) {
+  session.busy=true;
+  session.bounds=null;
+  drawCropBox();
+  $('cropPrev').disabled=$('cropNext').disabled=true;
+  $('cropSurface').hidden=true;
+  $('cropStatus').textContent='Đang mở trang '+session.page+'…';
+  try {
+    const page=await session.doc.getPage(session.page);
+    if (cropSession!==session) return;
+    const base=page.getViewport({scale:1});
+    const viewport=page.getViewport({scale:Math.min(3,2300/Math.max(base.width,base.height))});
+    cropCanvas.width=Math.ceil(viewport.width);
+    cropCanvas.height=Math.ceil(viewport.height);
+    await page.render({canvasContext:cropCanvas.getContext('2d'),viewport}).promise;
+    if (cropSession!==session) return;
+    $('cropSurface').hidden=false;
+    $('cropStatus').textContent='Trang '+session.page+' / '+session.doc.numPages+' · '+session.file.name;
+  } catch (error) {
+    if (cropSession===session) $('cropStatus').textContent='Không mở được trang. '+error.message;
+  } finally {
+    session.busy=false;
+    if (cropSession===session) {
+      $('cropPrev').disabled=session.page<=1;
+      $('cropNext').disabled=session.page>=session.doc.numPages;
+    }
+  }
+}
+async function openCrop(file,product) {
+  if (!file || cropSession || product?.readingImage) return;
+  const session={file,product,busy:true,page:1};
+  cropSession=session;
+  $('cropSurface').hidden=true;
+  $('cropPrev').disabled=$('cropNext').disabled=$('cropUse').disabled=true;
+  $('cropStatus').textContent='Đang mở PDF…';
+  $('cropDialog').showModal();
+  try {
+    const lib=await pdfjs();
+    const bytes=await file.arrayBuffer();
+    if (cropSession!==session) return;
+    session.task=lib.getDocument({data:bytes,isEvalSupported:false});
+    session.doc=await session.task.promise;
+    if (cropSession===session) await showCropPage(session);
+  } catch (error) {
+    if (cropSession===session) $('cropStatus').textContent='Không mở được PDF. '+error.message;
+  }
+}
+$('cropPdf').onclick=()=>{
+  const product=products[active];
+  if (product?.pdfFile) openCrop(product.pdfFile,product);
+  else $('cropPdfFile').click();
+};
+$('cropPdfFile').onchange=()=>{
+  const file=$('cropPdfFile').files[0];
+  $('cropPdfFile').value='';
+  if (file) openCrop(file,products[active]);
+};
+$('cropDialog').onclose=()=>{
+  const session=cropSession;
+  cropSession=null;
+  session?.task?.destroy().catch(()=>{});
+};
+$('cropClose').onclick=()=>$('cropDialog').close();
+for (const [id,delta] of [['cropPrev',-1],['cropNext',1]]) $(id).onclick=()=>{
+  if (!cropSession || cropSession.busy) return;
+  cropSession.page+=delta;
+  showCropPage(cropSession);
+};
+cropCanvas.onpointerdown=event=>{
+  if (!cropSession || cropSession.busy || event.button!==0) return;
+  cropCanvas.setPointerCapture(event.pointerId);
+  cropSession.pointer=event.pointerId;
+  cropSession.start=cropPoint(event);
+  cropSession.bounds=null;
+  drawCropBox();
+};
+cropCanvas.onpointermove=event=>{
+  if (cropSession && cropSession.pointer===event.pointerId) {
+    cropSession.bounds=cropBounds(cropSession.start,cropPoint(event));
+    drawCropBox();
+  }
+};
+cropCanvas.onpointerup=event=>{
+  cropCanvas.onpointermove(event);
+  if (cropSession) cropSession.pointer=null;
+};
+cropCanvas.onpointercancel=()=>{if (cropSession) {cropSession.pointer=null;cropSession.bounds=null;drawCropBox();}};
+$('cropUse').onclick=()=>{
+  const session=cropSession;
+  if (!session?.bounds || session.busy) return;
+  const {x,y,width,height}=session.bounds;
+  if (width<8 || height<8) return;
+  session.busy=true;
+  $('cropPrev').disabled=$('cropNext').disabled=$('cropUse').disabled=true;
+  const canvas=document.createElement('canvas');
+  canvas.width=width;
+  canvas.height=height;
+  canvas.getContext('2d').drawImage(cropCanvas,x,y,width,height,0,0,width,height);
+  canvas.toBlob(blob=>{
+    if (cropSession!==session) return;
+    if (!blob) {
+      session.busy=false;
+      $('cropPrev').disabled=session.page<=1;
+      $('cropNext').disabled=session.page>=session.doc.numPages;
+      drawCropBox();
+      $('cropStatus').textContent='Chưa tạo được ảnh vùng cắt.';
+      return;
+    }
+    if (!session.product) {
+      newProduct(session.file.name,session.file.name.replace(/\.pdf$/i,''));
+      session.product=products[active];
+    }
+    session.product.pdfFile=session.file;
+    attachCompositionImage(session.product,blob,'Vùng cắt từ trang '+session.page+'. Bấm Đọc chữ từ ảnh để trích văn bản.');
+    $('cropDialog').close();
+    $('imagePanel').scrollIntoView({block:'nearest'});
+  },'image/png');
+};
+function attachCompositionImage(product,file,status) {
+  if (product.imageUrl) URL.revokeObjectURL(product.imageUrl);
+  product.imageUrl=URL.createObjectURL(file);
+  product.imageStatus=status;
+  render();
+}
+let ocrLibrary;
+function loadOcr() {
+  return ocrLibrary ??= new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    script.onload=()=>resolve(window.Tesseract);
+    script.onerror=()=>{script.remove();ocrLibrary=null;reject(Error('Không tải được bộ đọc ảnh. Kiểm tra kết nối mạng.'));};
+    document.head.append(script);
+  });
+}
+$('attachImage').onclick=()=>$('compositionImage').click();
+$('compositionImage').onchange=()=>{
+  const file=$('compositionImage').files[0];
+  $('compositionImage').value='';
+  if (!file) return;
+  if (!products[active]) newProduct(file.name,file.name.replace(/\.[^.]+$/,''));
+  const product=products[active];
+  if (product.readingImage) return;
+  attachCompositionImage(product,file,'Ảnh đã được chèn. Bấm Đọc chữ từ ảnh để trích văn bản.');
+  $('imagePanel').scrollIntoView({block:'nearest'});
+};
+$('removeImage').onclick=()=>{
+  const product=products[active];
+  URL.revokeObjectURL(product.imageUrl);
+  delete product.imageUrl;
+  delete product.imageStatus;
+  render();
+};
+$('readImage').onclick=async ()=>{
+  const product=products[active];
+  const imageUrl=product?.imageUrl;
+  if (!imageUrl || product.readingImage) return;
+  if (product.text.trim() && !confirm('Thay văn bản Mục 3 hiện tại bằng văn bản đọc từ ảnh? Bảng thành phần hiện có sẽ được giữ.')) return;
+  product.readingImage=true;
+  product.imageStatus='Đang tải bộ đọc và xử lý ảnh…';
+  render();
+  let worker;
+  try {
+    const library=await loadOcr();
+    worker=await library.createWorker('eng+vie',1,{
+      logger:message=>{
+        if (message.status!=='recognizing text') return;
+        product.imageStatus='Đang đọc ảnh · '+Math.round(message.progress*100)+'%';
+        if (products[active]===product) $('imageStatus').textContent=product.imageStatus;
+      }
+    });
+    const {data}=await worker.recognize(imageUrl);
+    const extracted=data.text.trim();
+    if (!extracted) throw Error('Ảnh chưa đọc được chữ. Thử ảnh rõ hơn hoặc nhập từng dòng.');
+    product.text=extracted;
+    product.checked=false;
+    const rows=extract(extracted).filter(row=>row.ingredient.trim() && pctRange(row.pct));
+    if (!product.rows.length) product.rows=rows;
+    product.warning='Kiểm tra mọi dòng với ảnh gốc. Chỉnh văn bản Mục 3 hoặc bổ sung trực tiếp trong bảng.';
+    product.imageStatus='Đã đọc ảnh. Văn bản OCR nằm ở mục Văn bản Mục 3.';
+    if (products[active]===product) $('sectionDetails').open=true;
+  } catch (error) {
+    product.imageStatus='Lỗi đọc ảnh. '+error.message;
+  } finally {
+    try {if (worker) await worker.terminate();}
+    finally {product.readingImage=false;if (products[active]===product) render();}
+  }
+};
 function render() {
   for (const key of companies) $('company'+key).setAttribute('aria-pressed',String(key===company));
   $('portalCompany').value = company;
@@ -490,6 +934,29 @@ function render() {
   $('portalEntity').textContent = legalNames[company];
   $('editor').hidden = !products.length;
   const product = products[active];
+  $('imagePanel').hidden=!product?.imageUrl;
+  $('attachImage').disabled=$('cropPdf').disabled=Boolean(product?.readingImage || busy);
+  if (product?.imageUrl) {
+    $('imagePreview').src=product.imageUrl;
+    $('imageStatus').textContent=product.imageStatus;
+    $('readImage').disabled=$('removeImage').disabled=Boolean(product.readingImage);
+  } else $('imagePreview').removeAttribute('src');
+  const lines=product?.sourceLines;
+  $('mappingPanel').hidden=!lines?.length;
+  if (lines?.length) {
+    const layout=product.layout;
+    const sample=Math.max(0,layout?.index>=0 ? layout.index : lines.findIndex(line=>line.cells===layout?.columns));
+    product.mapping ??={start:sample,end:lines.length-1,sample,selected:layout?.found.slice()??[-1,-1,-1]};
+    mappingRange.forEach((key,i)=>{
+      $(key).replaceChildren(...lines.map(({page,cells},j)=>{
+        const option=node('option',(j+1)+' · Trang '+page+' · '+cells.map(c=>c.text).join(' | ').slice(0,170));
+        option.value=j;return option;
+      }));
+      $(key).value=product.mapping[['start','end','sample'][i]];
+    });
+    renderMappingColumns(product);
+    $('mappingStatus').textContent='';
+  }
   if (product) {
     $('product').replaceChildren(...products.map((p,i)=>{
       const option = node('option',(i+1)+'. '+(p.name || p.source));
