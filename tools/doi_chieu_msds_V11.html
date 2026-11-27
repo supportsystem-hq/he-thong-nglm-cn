@@ -42,7 +42,13 @@ dialog::backdrop{background:#000a}
 #reportPaper .signature{width:max-content;max-width:100%;margin:24px 0 0 auto;text-align:center}
 #reportPaper .signature img{display:block;margin:8px auto 0;width:auto;height:42px;max-width:125px;object-fit:contain;background:#191612;border-radius:4px;padding:4px}
 #reportPaper .signature p{margin:4px 0 0}
-@media print{
+.portal-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 17px;background:#15120e;border-bottom:1px solid #a78228;font-size:13px}
+.portal-bar a,.portal-entity{border:1px solid #655331;border-radius:7px;padding:4px 10px;background:#241e14}
+.portal-bar a{text-decoration:none;font-weight:750}.portal-entity{display:flex;align-items:center;gap:8px}
+.portal-entity img{height:23px;width:auto;max-width:88px;object-fit:contain}.portal-entity strong{color:var(--gold)}
+.portal-switch{margin-left:auto;display:flex;align-items:center;gap:8px}.portal-switch label{margin:0;white-space:nowrap}
+.portal-switch select{width:auto;padding:3px 6px;border-color:#a78228}
+@media print{.portal-bar{display:none!important}
   @page{size:A4 portrait;margin:13mm}
   html,body{background:#fff!important;margin:0}
   body>header,main,.reportControls{display:none!important}
@@ -54,7 +60,12 @@ dialog::backdrop{background:#000a}
   #reportPaper h3{break-after:avoid}
 }
 </style></head>
-<body><header><span class="brand">CÁT NGUYÊN · NGLM</span><div><h1>Đối chiếu MSDS</h1><p>Cổng điều hành nghiệp vụ nội bộ</p></div></header>
+<body>
+<nav class="portal-bar" aria-label="Điều hướng cổng hệ thống">
+<a href="../index.html">← Cổng Hệ Thống</a>
+<div class="portal-entity"><img id="portalLogo" alt=""><span>Pháp nhân: <strong id="portalEntity"></strong></span></div>
+<div class="portal-switch"><label for="portalCompany">Đổi công ty</label><select id="portalCompany"><option value="CN">Sơn Ô Tô Cát Nguyên</option><option value="NGLM">Nguyễn Gia Liên Minh</option></select></div>
+</nav><header><span class="brand">CÁT NGUYÊN · NGLM</span><div><h1>Đối chiếu MSDS</h1><p>Cổng điều hành nghiệp vụ nội bộ</p></div></header>
 <main>
 <section aria-labelledby="companyTitle"><h2 id="companyTitle">Pháp nhân đang thao tác</h2>
 <div class="grid">
@@ -113,7 +124,8 @@ let catalogName = '', products = [], active = 0, busy = false, catalogRevision =
 let spreadsheet, pdfModule;
 const companies = ['CN','NGLM'];
 const companyName = {CN:'Cát Nguyên',NGLM:'Nguyễn Gia Liên Minh'};
-let company = new URLSearchParams(location.search).get('company')?.toUpperCase();
+const companyParam = new URLSearchParams(location.search).get('company')?.trim().toLowerCase();
+let company = ({'cat-nguyen':'CN','nguyen-gia':'NGLM'})[companyParam] ?? companyParam?.toUpperCase();
 if (!companies.includes(company)) company = 'CN';
 const companyState = {CN:{products:[],active:0},NGLM:{products:[],active:0}};
 products = companyState[company].products;
@@ -125,6 +137,7 @@ for (const key of companies) $('company'+key).onclick = () => {
   $('pdfStatus').textContent = '';
   render();
 };
+$('portalCompany').onchange = () => $('company'+$('portalCompany').value).click();
 const xlsx = async () => spreadsheet ??= import('https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs');
 async function pdfjs() {
   if (!pdfModule) {
@@ -350,6 +363,7 @@ $('pdfs').onchange = async () => {
   busy = true;
   $('pdfs').disabled = true;
   for (const key of companies) $('company'+key).disabled = true;
+  $('portalCompany').disabled = true;
   for (const file of $('pdfs').files) {
     $('pdfStatus').textContent = 'Đang đọc '+file.name;
     try {
@@ -368,6 +382,7 @@ $('pdfs').onchange = async () => {
   busy = false;
   $('pdfs').disabled = false;
   for (const key of companies) $('company'+key).disabled = false;
+  $('portalCompany').disabled = false;
   $('pdfs').value = '';
   $('pdfStatus').textContent = 'Đã xử lý các PDF đã chọn. Mở từng hồ sơ để kiểm tra. PDF trùng đã được bỏ qua.';
   render();
@@ -470,6 +485,9 @@ function drawRows(product) {
 }
 function render() {
   for (const key of companies) $('company'+key).setAttribute('aria-pressed',String(key===company));
+  $('portalCompany').value = company;
+  $('portalLogo').src = logos[company];
+  $('portalEntity').textContent = legalNames[company];
   $('editor').hidden = !products.length;
   const product = products[active];
   if (product) {
