@@ -30,12 +30,12 @@ window.WORKSPACE_TOOLS = [
   }
 
   // --- VÍ DỤ KHI BẠN THÊM CÔNG CỤ THỨ 3 (Bỏ dấu // ở đầu các dòng dưới để kích hoạt) ---
-  // ,{
-  //   id: "cong-cu-moi",
-  //   name: "Tên Công Cụ Mới Của Bạn",
-  //   description: "Mô tả ngắn chức năng của công cụ mới này.",
-  //   icon: "🧾",
-  //   path: "./tools/ten-file-moi.html",
-  //   tag: "Kế toán & Nội bộ"
-  // }
+  //   ,{
+    id: "doi-chieu-msds",
+    name: "Đối chiếu MSDS",
+    description: "Đối chiếu thành phần Mục 3, xuất Excel và lập báo cáo khách hàng.",
+    icon: "📋",
+    path: "./tools/doi_chieu_msds_V11.html",
+    tag: "Pháp lý & Sở Công Thương"
+  }
 ];
