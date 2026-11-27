@@ -48,6 +48,7 @@ dialog::backdrop{background:#000a}
 .portal-entity img{height:23px;width:auto;max-width:88px;object-fit:contain}.portal-entity strong{color:var(--gold)}
 .portal-switch{margin-left:auto;display:flex;align-items:center;gap:8px}.portal-switch label{margin:0;white-space:nowrap}
 .portal-switch select{width:auto;padding:3px 6px;border-color:#a78228}
+#cropDialog{padding-top:0}.cropToolbar{position:sticky;top:0;z-index:2;background:#191612;padding:12px 0 6px}.cropToolbar h2{margin:0}
 #cropSurface{position:relative;width:fit-content;max-width:100%;margin:auto;line-height:0}
 #cropCanvas{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair}
 #cropBox{position:absolute;pointer-events:none;border:2px solid #b38918;background:#f2ce6940;box-sizing:border-box}
@@ -91,18 +92,26 @@ dialog::backdrop{background:#000a}
 <section id="editor" hidden><h2>Kiểm tra thành phần</h2>
 <label for="product">Hồ sơ đang xem</label><select id="product"></select>
 <div class="grid"><div><label for="code">Mã sản phẩm</label><input id="code"></div><div><label for="name">Tên sản phẩm</label><input id="name"></div><div><label for="invoice">Tên trên hóa đơn</label><input id="invoice"></div></div>
-<details id="mappingPanel" hidden><summary>Chọn cột thủ công</summary>
+<div class="bar"><button id="openMapping" type="button" aria-expanded="false" aria-controls="mappingPanel">Đổi cột thành phần</button></div>
+<div id="mappingPanel" hidden><p id="mappingHelp" class="muted"></p>
+<label for="mappingSource">Nguồn để chọn cột</label><select id="mappingSource"></select>
+<div id="mappingControls">
 <p class="muted">Chọn phạm vi từ dòng đầu đến dòng cuối của bảng. Chọn một dòng mẫu có ba cột cần lấy, rồi gán tên chất, CAS và hàm lượng bên dưới.</p>
 <div class="grid"><label>Từ dòng<select id="mapStart"></select></label><label>Đến dòng<select id="mapEnd"></select></label><label>Dòng mẫu để gán cột<select id="mapSample"></select></label></div>
 <div class="grid"><label>Tên chất<select id="mapName"></select></label><label>CAS<select id="mapCas"></select></label><label>Hàm lượng<select id="mapPct"></select></label></div>
-<button id="applyMapping">Dùng các cột đã chọn</button><p id="mappingStatus" role="status"></p>
-</details>
+<button id="applyMapping">Dùng các cột đã chọn</button><p id="mappingStatus" role="status"></p></div>
+</div>
 <div id="imagePanel" hidden>
 <p><strong>Ảnh bảng thành phần</strong></p>
 <img id="imagePreview" alt="Ảnh Mục 3 của hồ sơ đang xem" style="max-width:100%;max-height:380px;object-fit:contain">
-<div class="bar"><button id="readImage">Đọc chữ từ ảnh (OCR)</button><button id="removeImage">Gỡ ảnh</button></div>
+<div class="bar"><button id="readImage">Đọc chữ từ ảnh (OCR)</button><button id="useOcrDraft" hidden>Dùng kết quả OCR</button><button id="removeImage">Gỡ ảnh</button></div>
 <p id="imageStatus" role="status"></p>
 </div>
+<details id="pasteDetails"><summary>Dán bảng 3 cột từ Excel</summary>
+<label for="pasteRows">Dán theo thứ tự Thành phần, CAS, Hàm lượng. Giữ ghi chú về nguyên liệu trong ô hàm lượng.</label>
+<textarea id="pasteRows" placeholder="Sao chép 3 cột từ Excel rồi dán vào đây"></textarea>
+<button id="pasteApply" type="button">Đưa vào bảng đối chiếu</button><p id="pasteStatus" role="status"></p>
+</details>
 <details id="sectionDetails"><summary>Văn bản Mục 3</summary><label for="sectionText">Chỉnh hoặc dán nguyên văn Mục 3</label><textarea id="sectionText"></textarea>
 <div class="bar"><button id="parse">Trích lại từ văn bản</button></div></details>
 <p id="note" class="notice" role="status"></p>
@@ -114,10 +123,10 @@ dialog::backdrop{background:#000a}
 <div id="summary" role="status"></div><div class="bar"><button id="export" class="primary" disabled>Xuất Excel</button><button id="customerReport" disabled>Báo cáo khách hàng</button></div></section>
 </main>
 <dialog id="cropDialog" aria-labelledby="cropTitle">
-<h2 id="cropTitle">Cắt bảng thành phần từ PDF</h2>
+<div class="cropToolbar"><h2 id="cropTitle">Cắt bảng thành phần từ PDF</h2>
 <p>Kéo khung quanh bảng Mục 3, rồi bấm Dùng vùng cắt.</p>
-<div class="bar"><button id="cropPrev">Trang trước</button><button id="cropNext">Trang sau</button><button id="cropUse" class="primary" disabled>Dùng vùng cắt</button><button id="cropClose">Đóng</button></div>
-<p id="cropStatus" role="status"></p>
+<div class="bar"><button id="cropPrev">Trang trước</button><label for="cropPage">Trang</label><input id="cropPage" type="number" min="1" value="1" style="width:78px"><button id="cropGo">Đến trang</button><button id="cropNext">Trang sau</button><button id="cropUse" class="primary" disabled>Dùng vùng cắt</button><button id="cropClose">Đóng</button></div>
+<p id="cropStatus" role="status"></p></div>
 <div id="cropSurface" hidden><canvas id="cropCanvas"></canvas><div id="cropBox" hidden></div></div>
 </dialog>
 <dialog id="reportDialog" aria-labelledby="reportDialogTitle">
@@ -135,7 +144,7 @@ dialog::backdrop{background:#000a}
 </dialog>
 <script type="module">
 const $ = id => document.getElementById(id);
-const casPattern = /\b\d{2,7}\s*[-‐‑‒–−]\s*\d{2}\s*[-‐‑‒–−]\s*\d\b/g;
+const casPattern = /(?<![\d-])\b[1-9]\d{1,6}\s*[-‐‑‒–−]\s*\d{2}\s*[-‐‑‒–−]\s*\d\b(?!-)/g;
 const casList = value => [...String(value ?? '').matchAll(casPattern)].map(m => m[0].replace(/\s/g,'').replace(/[‐‑‒–−]/g,'-'));
 const norm = value => String(value ?? '').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase('vi');
 let index = {cas:new Map(), name:new Map()};
@@ -671,11 +680,48 @@ function drawRows(product) {
     $('rows').append(tr);
   });
 }
+function clearImageMapping(product) {
+  delete product.ocrLines;
+  delete product.ocrDraft;
+  if (product.mappingSource==='image') {
+    delete product.mappingSource;
+    delete product.mapping;
+  }
+}
+function mappingLines(product) {
+  return product?.mappingSource==='image' ? product.ocrLines : product?.sourceLines;
+}
+$('openMapping').onclick=()=>{
+  const panel=$('mappingPanel');
+  panel.hidden=!panel.hidden;
+  $('openMapping').setAttribute('aria-expanded',String(!panel.hidden));
+};
+$('mappingSource').onchange=()=>{
+  const product=products[active];
+  product.mappingSource=$('mappingSource').value;
+  delete product.mapping;
+  render();
+};
+function readMappedImage(lines,columns,selected) {
+  const boundaries=columns.slice(1).map((cell,i)=>(columns[i].right+cell.x)/2);
+  const rows=[];
+  for (const {cells} of lines) {
+    const values=columns.map(()=>[]);
+    for (const cell of cells) {
+      const center=(cell.x+cell.right)/2;
+      values[boundaries.filter(boundary=>center>=boundary).length].push(cell.text);
+    }
+    const [ingredient,id,pct]=selected.map(index=>values[index].join(' ').trim());
+    const cas=casList(id).find(value=>!/^0/.test(value) && !/\d{3}-\d{3}-\d{2}-\d/.test(id));
+    if (cas) rows.push({ingredient,cas,pct});
+  }
+  return rows;
+}
 const mappingFields=['mapName','mapCas','mapPct'];
 const mappingRange=['mapStart','mapEnd','mapSample'];
 function renderMappingColumns(product, reset=false) {
   const state=product.mapping;
-  const sample=product.sourceLines[state.sample];
+  const sample=mappingLines(product)[state.sample];
   const columns=sample.cells;
   if (reset) state.selected=Object.values(columnLabels).map(pattern=>columns.findIndex(cell=>pattern.test(cell.text)));
   mappingFields.forEach((key,i)=>{
@@ -706,16 +752,17 @@ $('applyMapping').onclick=()=>{
     $('mappingStatus').textContent='Chọn ba cột khác nhau.';
     return;
   }
-  const lines=p.sourceLines.slice(start,end+1);
-  const columns=p.sourceLines[sample].cells;
+  const source=mappingLines(p);
+  const lines=source.slice(start,end+1);
+  const columns=source[sample].cells;
   const isHeader=selected.every((column,i)=>Object.values(columnLabels)[i].test(columns[column].text));
   const layout={columns,index:isHeader?sample-start:-1};
-  const rows=readMappedRows(lines,layout,selected);
+  const rows=p.mappingSource==='image' ? readMappedImage(lines,columns,selected) : readMappedRows(lines,layout,selected);
   if (!rows.length) {$('mappingStatus').textContent='Chưa đọc được hàng nào từ các cột đã chọn.';return;}
   if (p.rows.length && !confirm('Thay bảng thành phần hiện tại bằng các dòng vừa trích?')) return;
   p.rows=rows;
   p.checked=false;
-  p.warning=rows.some(row=>!row.cas||!pctRange(row.pct))?'Trích xuất chưa đầy đủ. Kiểm tra các dòng còn thiếu hoặc chưa rõ.':'Đã trích '+rows.length+' dòng theo vùng đã chọn. Hãy kiểm tra với PDF.';
+  p.warning=rows.some(row=>!row.ingredient||!row.cas||!pctRange(row.pct))?'Trích xuất chưa đầy đủ. Kiểm tra các dòng còn thiếu hoặc chưa rõ.':'Đã trích '+rows.length+' dòng theo vùng đã chọn. Hãy kiểm tra với tài liệu nguồn.';
   render();
 };
 let cropSession;
@@ -742,6 +789,10 @@ function drawCropBox() {
 }
 async function showCropPage(session) {
   session.busy=true;
+  $('cropPage').value=session.page;
+  $('cropPage').max=session.doc.numPages;
+  $('cropGo').disabled=true;
+  $('cropDialog').scrollTop=0;
   session.bounds=null;
   drawCropBox();
   $('cropPrev').disabled=$('cropNext').disabled=true;
@@ -763,6 +814,7 @@ async function showCropPage(session) {
   } finally {
     session.busy=false;
     if (cropSession===session) {
+      $('cropGo').disabled=false;
       $('cropPrev').disabled=session.page<=1;
       $('cropNext').disabled=session.page>=session.doc.numPages;
     }
@@ -773,7 +825,7 @@ async function openCrop(file,product) {
   const session={file,product,busy:true,page:1};
   cropSession=session;
   $('cropSurface').hidden=true;
-  $('cropPrev').disabled=$('cropNext').disabled=$('cropUse').disabled=true;
+  $('cropGo').disabled=$('cropPrev').disabled=$('cropNext').disabled=$('cropUse').disabled=true;
   $('cropStatus').textContent='Đang mở PDF…';
   $('cropDialog').showModal();
   try {
@@ -808,6 +860,17 @@ for (const [id,delta] of [['cropPrev',-1],['cropNext',1]]) $(id).onclick=()=>{
   cropSession.page+=delta;
   showCropPage(cropSession);
 };
+$('cropGo').onclick=()=>{
+  if (!cropSession?.doc || cropSession.busy) return;
+  const page=Number($('cropPage').value);
+  if (!Number.isInteger(page)||page<1||page>cropSession.doc.numPages) {
+    $('cropStatus').textContent='Nhập số trang từ 1 đến '+cropSession.doc.numPages+'.';
+    return;
+  }
+  cropSession.page=page;
+  showCropPage(cropSession);
+};
+$('cropPage').onkeydown=event=>{if(event.key==='Enter') {$('cropGo').click();event.preventDefault();}};
 cropCanvas.onpointerdown=event=>{
   if (!cropSession || cropSession.busy || event.button!==0) return;
   cropCanvas.setPointerCapture(event.pointerId);
@@ -833,7 +896,7 @@ $('cropUse').onclick=()=>{
   const {x,y,width,height}=session.bounds;
   if (width<8 || height<8) return;
   session.busy=true;
-  $('cropPrev').disabled=$('cropNext').disabled=$('cropUse').disabled=true;
+  $('cropGo').disabled=$('cropPrev').disabled=$('cropNext').disabled=$('cropUse').disabled=true;
   const canvas=document.createElement('canvas');
   canvas.width=width;
   canvas.height=height;
@@ -842,6 +905,7 @@ $('cropUse').onclick=()=>{
     if (cropSession!==session) return;
     if (!blob) {
       session.busy=false;
+      $('cropGo').disabled=false;
       $('cropPrev').disabled=session.page<=1;
       $('cropNext').disabled=session.page>=session.doc.numPages;
       drawCropBox();
@@ -856,10 +920,12 @@ $('cropUse').onclick=()=>{
     attachCompositionImage(session.product,blob,'Vùng cắt từ trang '+session.page+'. Bấm Đọc chữ từ ảnh để trích văn bản.');
     $('cropDialog').close();
     $('imagePanel').scrollIntoView({block:'nearest'});
+    readCompositionImage(session.product);
   },'image/png');
 };
 function attachCompositionImage(product,file,status) {
   if (product.imageUrl) URL.revokeObjectURL(product.imageUrl);
+  clearImageMapping(product);
   product.imageUrl=URL.createObjectURL(file);
   product.imageStatus=status;
   render();
@@ -884,19 +950,246 @@ $('compositionImage').onchange=()=>{
   if (product.readingImage) return;
   attachCompositionImage(product,file,'Ảnh đã được chèn. Bấm Đọc chữ từ ảnh để trích văn bản.');
   $('imagePanel').scrollIntoView({block:'nearest'});
+  readCompositionImage(product);
 };
 $('removeImage').onclick=()=>{
   const product=products[active];
   URL.revokeObjectURL(product.imageUrl);
+  clearImageMapping(product);
   delete product.imageUrl;
   delete product.imageStatus;
   render();
 };
-$('readImage').onclick=async ()=>{
-  const product=products[active];
+$('readImage').onclick=()=>readCompositionImage(products[active]);
+function ocrWordRows(data) {
+  const words=(data.words?.length ? data.words : (data.lines||[]).flatMap(line=>line.words||[]))
+    .filter(word=>word.bbox && word.text.trim());
+  const lines=[];
+  for (const word of words.map(({text,bbox})=>({text,x:bbox.x0,right:bbox.x1,y:(bbox.y0+bbox.y1)/2,h:bbox.y1-bbox.y0})).sort((a,b)=>a.y-b.y)) {
+    const line=lines.find(line=>Math.abs(line.y-word.y)<=Math.max(3,Math.min(line.h,word.h)*0.55));
+    if (line) line.words.push(word);
+    else lines.push({y:word.y,h:word.h,words:[word]});
+  }
+  const stop=/^\s*(?:(?:section|phần|mục)\s*[4-9]\b|4\s*[.:)]\s*(?:first aid|biện pháp|sơ cứu))/i;
+  const start=/^\s*(?:(?:section|phần|mục)\s*3\b|3\s*[.:)]\s*(?:composition|thành phần|thông tin))/i;
+  const textOf=words=>words.map(word=>word.text).join(' ').replace(/^[\s|:]+|[\s|]+$/g,'');
+  const ordered=lines.map(line=>line.words.sort((a,b)=>a.x-b.x));
+  const first=ordered.findIndex(words=>start.test(textOf(words)));
+  const content=ordered.slice(first+1);
+  const last=content.findIndex(words=>stop.test(textOf(words)));
+  const table=last<0?content:content.slice(0,last);
+  return table;
+}
+function ocrMappingLines(data) {
+  return ocrWordRows(data).map(words=>{
+    const cells=[];
+    words.forEach((word,i)=>{
+      if (/^[|]+$/.test(word.text)) return;
+      const prev=words[i-1];
+      const cell=cells.at(-1);
+      if (cell && prev && !/^[|]+$/.test(prev.text) && word.x-prev.right<Math.max(6,word.h*0.95)) {
+        cell.text+=' '+word.text;
+        cell.right=word.right;
+      } else cells.push({x:word.x,right:word.right,text:word.text});
+    });
+    return {cells};
+  });
+}
+function extractOcrRows(data) {
+  const table=ocrWordRows(data);
+  const textOf=words=>words.map(word=>word.text).join(' ').replace(/^[\s|:]+|[\s|]+$/g,'');
+  const stop=/^\s*(?:(?:section|phần|mục)\s*[4-9]\b|4\s*[.:)]\s*(?:first aid|biện pháp|sơ cứu))/i;
+  const start=/^\s*(?:(?:section|phần|mục)\s*3\b|3\s*[.:)]\s*(?:composition|thành phần|thông tin))/i;
+  const rows=[];
+  for (const words of table) {
+    const casIndex=words.findIndex(word=>casList(word.text).length===1);
+    if (casIndex<0) continue;
+    const cas=casList(words[casIndex].text)[0];
+    // A CAS checksum rejects many OCR substitutions without altering the source value.
+    const digits=cas.replace(/-/g,'');
+    if ([...digits.slice(0,-1)].reverse().reduce((sum,d,i)=>sum+Number(d)*(i+1),0)%10!==Number(digits.at(-1))) continue;
+    const before=textOf(words.slice(0,casIndex));
+    const after=textOf(words.slice(casIndex+1));
+    const leading=before.match(amountAfter);
+    const trailingName=leading && before.slice(leading[0].length).trim();
+    const prior=before.match(amountBefore);
+    const priorName=prior && cleanCell(before.slice(0,prior.index));
+    const parsed=priorName && pctRange(prior[1])
+      ? {ingredient:priorName,cas,pct:prior[1]}
+      : trailingName && pctRange(leading[1]) && !after
+      ? {ingredient:trailingName,cas,pct:leading[1]}
+      : extract([before,cas,after].join(' | '))[0];
+    if (parsed?.ingredient && pctRange(parsed.pct)) rows.push(parsed);
+  }
+  if (rows.length) return rows;
+  const clean=data.text.split(/\r?\n/);
+  const section=clean.slice(clean.findIndex(line=>start.test(line))+1);
+  const end=section.findIndex(line=>stop.test(line));
+  return extract(section.slice(0,end<0?undefined:end).join('\n')).filter(row=>row.ingredient.trim() && /^[1-9]/.test(row.cas) && !/^[\d-]+$/.test(row.ingredient));
+}
+async function imageWithoutTableRules(url) {
+  const image=new Image();
+  image.src=url;
+  await image.decode();
+  const canvas=document.createElement('canvas');
+  const scale=Math.min(2.5,2600/Math.max(image.naturalWidth,image.naturalHeight));
+  canvas.width=Math.round(image.naturalWidth*scale);
+  canvas.height=Math.round(image.naturalHeight*scale);
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  context.fillStyle='#fff';
+  context.fillRect(0,0,canvas.width,canvas.height);
+  context.drawImage(image,0,0,canvas.width,canvas.height);
+  const {width,height}=canvas;
+  const pixels=context.getImageData(0,0,width,height);
+  const rgba=pixels.data;
+  let changed=false;
+  const rules=[];
+  for (const vertical of [false,true]) {
+    const length=vertical?height:width;
+    const count=vertical?width:height;
+    const stride=vertical?width*4:4;
+    const threshold=Math.max(35,length*0.08);
+    for (let line=0;line<count;line++) {
+      const base=vertical?line*4:line*width*4;
+      let start=0;
+      for (let position=0;position<=length;position++) {
+        const offset=base+position*stride;
+        if (position<length && Math.max(rgba[offset],rgba[offset+1],rgba[offset+2])<120) continue;
+        if (position-start>=threshold) {
+          changed=true;
+          if (!vertical && position-start>=width*0.35) rules.push({y:line,left:start,right:position});
+          for (let mark=start;mark<position;mark++) {
+            const pixel=base+mark*stride;
+            rgba[pixel]=rgba[pixel+1]=rgba[pixel+2]=255;
+          }
+        }
+        start=position+1;
+      }
+    }
+  }
+  context.putImageData(pixels,0,0);
+  const groups=[];
+  for (const rule of rules) {
+    const group=groups.find(item=>Math.abs(item.left-rule.left)<width*0.015 &&
+      Math.abs(item.right-rule.right)<width*0.015 && rule.y-item.bottom<height*0.12);
+    if (!group) groups.push({...rule,top:rule.y,bottom:rule.y,count:1});
+    else if (rule.y-group.bottom>Math.max(3,height*0.004)) {group.bottom=rule.y;group.count++;}
+  }
+  const crops=groups.filter(group=>group.count>=3).sort((a,b)=>b.count-a.count).slice(0,3).map(group=>{
+    const left=Math.max(0,group.left-8), top=Math.max(0,group.top-8);
+    const right=Math.min(width,group.right+8), bottom=Math.min(height,group.bottom+8);
+    const crop=document.createElement('canvas');
+    crop.width=right-left;
+    crop.height=bottom-top;
+    crop.getContext('2d').drawImage(canvas,left,top,crop.width,crop.height,0,0,crop.width,crop.height);
+    return crop;
+  });
+  return changed || scale>1 ? [canvas,...crops] : [];
+}
+function ruledTableBounds(pixels,width,height) {
+  const dark=(x,y)=>{const i=(y*width+x)*4;return pixels[i+3]>100 && Math.max(pixels[i],pixels[i+1],pixels[i+2])<220;};
+  const runs=[];
+  for (let x=3;x<width-3;x++) {
+    let start=0;
+    for (let y=0;y<=height;y++) {
+      if (y<height && dark(x,y)) continue;
+      if (y-start>height*0.32 && start>1 && y<height-1) runs.push({top:start,bottom:y});
+      start=y+1;
+    }
+  }
+  const clusters=[];
+  for (const run of runs) {
+    const group=clusters.find(item=>Math.abs(run.top-item.top)<4 && Math.abs(run.bottom-item.bottom)<5);
+    if (group) group.count++;
+    else clusters.push({...run,count:1});
+  }
+  function centers(values) {
+    const groups=[];
+    for (const value of values) {
+      const group=groups.at(-1);
+      if (group && value-group.at(-1)<=2) group.push(value);
+      else groups.push([value]);
+    }
+    return groups.map(group=>Math.round((group[0]+group.at(-1))/2));
+  }
+  for (const {top,bottom} of clusters.sort((a,b)=>b.count-a.count).slice(0,5)) {
+    const vertical=[];
+    for (let x=3;x<width-3;x++) {
+      let hits=0;
+      for (let y=top;y<bottom;y++) if (dark(x,y)) hits++;
+      if (hits/(bottom-top)>0.75) vertical.push(x);
+    }
+    const xs=centers(vertical);
+    if (xs.length<4 || xs.length>12) continue;
+    const horizontal=[];
+    for (let y=Math.max(0,top-5);y<Math.min(height,bottom+5);y++) {
+      let hits=0;
+      for (let x=xs[0];x<=xs.at(-1);x++) if (dark(x,y)) hits++;
+      if (hits/(xs.at(-1)-xs[0])>0.56) horizontal.push(y);
+    }
+    const ys=centers(horizontal);
+    if (ys.length>=3 && ys.length<=24) return {xs,ys};
+  }
+  return null;
+}
+function ocrTableRoles(headers) {
+  const simple=value=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const names=headers.map(simple);
+  return [
+    names.findIndex(value=>/thanh phan|ten (?:hoa hoc|chat)|ingredient|substance|^name/.test(value)),
+    names.findIndex(value=>/\bcas\b/.test(value) && !/\b(?:ec|index)\b/.test(value)),
+    names.findIndex(value=>/n[eo]ng\s*d[o0]|ham\s*luong|conc|content|qty|^\s*%/.test(value))
+  ];
+}
+async function readRuledOcrTable(url,worker,library) {
+  const image=new Image();
+  image.src=url;
+  await image.decode();
+  const base=document.createElement('canvas');
+  const scale=Math.min(1,2200/Math.max(image.naturalWidth,image.naturalHeight));
+  base.width=Math.round(image.naturalWidth*scale);
+  base.height=Math.round(image.naturalHeight*scale);
+  const context=base.getContext('2d',{willReadFrequently:true});
+  context.fillStyle='white';
+  context.fillRect(0,0,base.width,base.height);
+  context.drawImage(image,0,0,base.width,base.height);
+  const grid=ruledTableBounds(context.getImageData(0,0,base.width,base.height).data,base.width,base.height);
+  if (!grid) return [];
+  const {xs,ys}=grid;
+  await worker.setParameters({tessedit_pageseg_mode:library.PSM.SINGLE_BLOCK});
+  async function readCell(row,col) {
+    const x=xs[col]+2,y=ys[row]+2,w=xs[col+1]-x-2,h=ys[row+1]-y-2;
+    if (w<5||h<5) return '';
+    const canvas=document.createElement('canvas');
+    canvas.width=w*3+20;canvas.height=h*3+20;
+    const cell=canvas.getContext('2d');
+    cell.fillStyle='white';cell.fillRect(0,0,canvas.width,canvas.height);
+    cell.drawImage(base,x,y,w,h,10,10,w*3,h*3);
+    const {data}=await worker.recognize(canvas);
+    return data.text.trim().replace(/\s+/g,' ');
+  }
+  const headers=[];
+  for (let col=0;col<xs.length-1;col++) headers.push(await readCell(0,col));
+  const roles=ocrTableRoles(headers);
+  if (roles.some(col=>col<0) || new Set(roles).size!==3) return [];
+  const rows=[];
+  for (let row=1;row<ys.length-1;row++) {
+    await worker.setParameters({tessedit_pageseg_mode:library.PSM.SINGLE_LINE});
+    const ingredient=await readCell(row,roles[0]);
+    const id=await readCell(row,roles[1]);
+    await worker.setParameters({tessedit_pageseg_mode:library.PSM.SINGLE_BLOCK});
+    const pct=await readCell(row,roles[2]);
+    const candidate=casList(id.replace(/\s+/g,''))[0]??'';
+    const digits=candidate.replace(/-/g,'');
+    const cas=candidate && [...digits.slice(0,-1)].reverse().reduce((sum,d,i)=>sum+Number(d)*(i+1),0)%10===Number(digits.at(-1)) ? candidate : '';
+    if (ingredient||cas||pct) rows.push({ingredient,cas,pct});
+  }
+  return rows;
+}
+async function readCompositionImage(product) {
   const imageUrl=product?.imageUrl;
   if (!imageUrl || product.readingImage) return;
-  if (product.text.trim() && !confirm('Thay văn bản Mục 3 hiện tại bằng văn bản đọc từ ảnh? Bảng thành phần hiện có sẽ được giữ.')) return;
+
   product.readingImage=true;
   product.imageStatus='Đang tải bộ đọc và xử lý ảnh…';
   render();
@@ -910,22 +1203,93 @@ $('readImage').onclick=async ()=>{
         if (products[active]===product) $('imageStatus').textContent=product.imageStatus;
       }
     });
-    const {data}=await worker.recognize(imageUrl);
+    await worker.setParameters({tessedit_pageseg_mode:library.PSM.SPARSE_TEXT});
+    let {data}=await worker.recognize(imageUrl);
+    let rows=extractOcrRows(data);
+    try {
+      for (const adjusted of await imageWithoutTableRules(imageUrl)) {
+        const retry=await worker.recognize(adjusted);
+        const candidate=extractOcrRows(retry.data);
+        const countComplete=items=>items.filter(row=>row.cas && pctRange(row.pct)).length;
+        const existing=rows.filter(row=>row.cas && pctRange(row.pct));
+        const retainsExisting=existing.every(row=>candidate.some(next=>next.cas===row.cas && pctRange(next.pct)));
+        if (countComplete(candidate)>countComplete(rows) && retainsExisting) {
+          data=retry.data;
+          rows=candidate;
+        }
+      }
+    } catch {
+      // Keep the first pass if the alternative image cannot be processed.
+    }
+    try {
+      const cellRows=await readRuledOcrTable(imageUrl,worker,library);
+      const recognized=cellRows.filter(row=>row.cas && row.ingredient).length;
+      if (recognized>=2 && recognized>=rows.filter(row=>row.cas&&row.ingredient).length) rows=cellRows;
+    } catch {
+      // The text-based result remains available if the ruled table cannot be read.
+    }
     const extracted=data.text.trim();
-    if (!extracted) throw Error('Ảnh chưa đọc được chữ. Thử ảnh rõ hơn hoặc nhập từng dòng.');
-    product.text=extracted;
+    if (!extracted && !rows.length) throw Error('Ảnh chưa đọc được chữ. Thử ảnh rõ hơn hoặc nhập từng dòng.');
+    if (!product.rows.length) product.text=extracted;
     product.checked=false;
-    const rows=extract(extracted).filter(row=>row.ingredient.trim() && pctRange(row.pct));
-    if (!product.rows.length) product.rows=rows;
+    product.ocrLines=ocrMappingLines(data);
+    delete product.mapping;
+    if (product.ocrLines.length) product.mappingSource='image';
+    product.ocrDraft={text:extracted,rows};
+    if (!product.rows.length && rows.length) applyOcrDraft(product);
     product.warning='Kiểm tra mọi dòng với ảnh gốc. Chỉnh văn bản Mục 3 hoặc bổ sung trực tiếp trong bảng.';
-    product.imageStatus='Đã đọc ảnh. Văn bản OCR nằm ở mục Văn bản Mục 3.';
-    if (products[active]===product) $('sectionDetails').open=true;
+    product.imageStatus=!rows.length ? 'Chưa ghép được bảng từ ảnh. Bạn có thể dùng Đổi cột thành phần hoặc Dán bảng 3 cột từ Excel.' : product.ocrDraft ? 'OCR tìm được '+rows.length+' dòng. Bấm Dùng kết quả OCR để thay bảng hiện tại.' : 'Đã điền '+rows.length+' dòng từ ảnh. Hãy kiểm tra trước khi xuất.';
+    if (products[active]===product && !rows.length) $('sectionDetails').open=true;
   } catch (error) {
     product.imageStatus='Lỗi đọc ảnh. '+error.message;
   } finally {
     try {if (worker) await worker.terminate();}
     finally {product.readingImage=false;if (products[active]===product) render();}
   }
+}
+function applyOcrDraft(product) {
+  const draft=product.ocrDraft;
+  product.text=draft.text;
+  product.rows=draft.rows;
+  product.checked=false;
+  product.imageStatus='Đã điền '+draft.rows.length+' dòng từ ảnh. Hãy kiểm tra trước khi xuất.';
+  delete product.ocrDraft;
+}
+$('useOcrDraft').onclick=()=>{
+  const product=products[active];
+  if (!product?.ocrDraft?.rows.length || !confirm('Thay bảng thành phần hiện tại bằng kết quả OCR?')) return;
+  applyOcrDraft(product);
+  render();
+};
+function parsePastedRows(text) {
+  const rows=[];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const cells=line.split('\t').map(cell=>cell.trim());
+    if (cells.length!==3) throw Error('Mỗi dòng cần đúng 3 cột Excel. Kiểm tra dòng '+(rows.length+1)+'.');
+    const [ingredient,cas,pct]=cells;
+    if (!rows.length && /^(?:số |mã )?cas(?:\s*(?:no\.?|number))?$/i.test(cas)) continue;
+    if (!ingredient && !cas && !pct) continue;
+    if (cas && casList(cas)[0]!==cas) throw Error('Mã CAS chưa đúng tại dòng '+(rows.length+1)+'. Kiểm tra lại ô CAS.');
+    rows.push({ingredient,cas,pct});
+  }
+  return rows;
+}
+$('pasteApply').onclick=()=>{
+  const product=products[active];
+  if (!product) return;
+  try {
+    const rows=parsePastedRows($('pasteRows').value);
+    if (!rows.length) throw Error('Chưa có dòng thành phần để nhập.');
+    if (product.rows.length && !confirm('Thay bảng thành phần hiện tại bằng dữ liệu vừa dán?')) return;
+    product.rows=rows;
+    delete product.ocrDraft;
+    product.checked=false;
+    product.warning='Đã nhập '+rows.length+' dòng từ bảng dán. Kiểm tra với tài liệu gốc trước khi xuất.';
+    $('pasteRows').value='';
+    $('pasteStatus').textContent='';
+    render();
+  } catch (error) {$('pasteStatus').textContent=error.message;}
 };
 function render() {
   for (const key of companies) $('company'+key).setAttribute('aria-pressed',String(key===company));
@@ -937,19 +1301,26 @@ function render() {
   $('imagePanel').hidden=!product?.imageUrl;
   $('attachImage').disabled=$('cropPdf').disabled=Boolean(product?.readingImage || busy);
   if (product?.imageUrl) {
+    $('useOcrDraft').hidden=!product.ocrDraft?.rows.length || product.readingImage;
     $('imagePreview').src=product.imageUrl;
     $('imageStatus').textContent=product.imageStatus;
     $('readImage').disabled=$('removeImage').disabled=Boolean(product.readingImage);
   } else $('imagePreview').removeAttribute('src');
-  const lines=product?.sourceLines;
-  $('mappingPanel').hidden=!lines?.length;
+  const sources=[['pdf','PDF gốc',product?.sourceLines],['image','Ảnh hoặc vùng cắt đã OCR',product?.ocrLines]].filter(([, ,lines])=>lines?.length);
+  if (product && !sources.some(([key])=>key===product.mappingSource)) product.mappingSource=sources[0]?.[0];
+  const lines=mappingLines(product);
+  $('mappingControls').hidden=!lines?.length;
+  $('mappingSource').disabled=sources.length<2;
+  $('mappingSource').replaceChildren(...sources.map(([key,label])=>{const option=node('option',label);option.value=key;return option;}));
+  $('mappingSource').value=product?.mappingSource??'';
+  $('mappingHelp').textContent=lines?.length?'Chọn vùng và dòng mẫu rồi gán ba cột bên dưới.':'Nạp PDF có lớp chữ hoặc đọc OCR từ ảnh để chọn cột.';
   if (lines?.length) {
-    const layout=product.layout;
+    const layout=product.mappingSource==='image'?layoutFor(lines):product.layout;
     const sample=Math.max(0,layout?.index>=0 ? layout.index : lines.findIndex(line=>line.cells===layout?.columns));
     product.mapping ??={start:sample,end:lines.length-1,sample,selected:layout?.found.slice()??[-1,-1,-1]};
     mappingRange.forEach((key,i)=>{
       $(key).replaceChildren(...lines.map(({page,cells},j)=>{
-        const option=node('option',(j+1)+' · Trang '+page+' · '+cells.map(c=>c.text).join(' | ').slice(0,170));
+        const option=node('option',(j+1)+(page?' · Trang '+page:'')+' · '+cells.map(c=>c.text).join(' | ').slice(0,170));
         option.value=j;return option;
       }));
       $(key).value=product.mapping[['start','end','sample'][i]];
