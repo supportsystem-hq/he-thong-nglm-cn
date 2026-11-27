@@ -30,7 +30,7 @@ window.WORKSPACE_TOOLS = [
   }
 
   // --- VÍ DỤ KHI BẠN THÊM CÔNG CỤ THỨ 3 (Bỏ dấu // ở đầu các dòng dưới để kích hoạt) ---
-  //   ,{
+  ,{
     id: "doi-chieu-msds",
     name: "Đối chiếu MSDS",
     description: "Đối chiếu thành phần Mục 3, xuất Excel và lập báo cáo khách hàng.",
