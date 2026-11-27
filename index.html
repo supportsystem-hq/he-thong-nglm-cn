@@ -543,7 +543,9 @@ function renderApp() {
   document.getElementById("toolsSectionLabel").textContent =
     `2. Công cụ nghiệp vụ — Đang áp dụng cho: ${activeCompany.fullName}`;
 
-  const allowedTools = WORKSPACE_TOOLS.filter(t => (user.allowedTools || []).includes(t.id));
+  const allowedTools = user.role === "admin"
+  ? WORKSPACE_TOOLS
+  : WORKSPACE_TOOLS.filter(t => (user.allowedTools || []).includes(t.id));(t => (user.allowedTools || []).includes(t.id));
   document.getElementById("toolsGrid").innerHTML = allowedTools.length
     ? allowedTools.map(t => `
         <div class="tool-card">
