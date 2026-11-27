@@ -616,7 +616,7 @@ function pctRange(value) {
   return {lo,hi};
 }
 function evaluate(product) {
-  let review = !product.checked || !product.rows.length || !catalogName;
+  let review = !product.rows.length || !catalogName;
   let highest = 0;
   const details = product.rows.map(row => {
     const hit = match(row);
@@ -640,7 +640,9 @@ function evaluate(product) {
     return {row,hit,notes:[...flags].join(' | ')};
   });
   const business = ['Chưa ghi nhận tín hiệu theo VBA','Rà soát giấy chứng nhận đủ điều kiện','Rà soát giấy phép kiểm soát đặc biệt – Nhóm 2','Rà soát giấy phép kiểm soát đặc biệt – Nhóm 1'][highest];
-  return {details,review,highest,business:highest || !review ? business : 'Chờ rà soát',importResult:highest>=2 ? 'Rà soát giấy phép nhập khẩu' : highest===1 ? 'Không yêu cầu theo phạm vi đối chiếu' : review ? 'Chờ rà soát' : 'Chưa ghi nhận tín hiệu theo VBA'};
+  const conclusionReady = !review && details.every(({row})=>row.ingredient.trim());
+  review ||= !product.checked;
+  return {details,review,highest,conclusionReady,business:highest || !review ? business : 'Chờ rà soát',importResult:highest>=2 ? 'Rà soát giấy phép nhập khẩu' : highest===1 ? 'Không yêu cầu theo phạm vi đối chiếu' : review ? 'Chờ rà soát' : 'Chưa ghi nhận tín hiệu theo VBA'};
 }
 function updateResults() {
   const list = node('ul');
@@ -1394,14 +1396,14 @@ const legalNames={CN:'CÔNG TY TNHH SƠN Ô TÔ CÁT NGUYÊN',NGLM:'CÔNG TY TNH
 const taxIds={CN:'0319353151',NGLM:'0317110114'};
 function customerConclusion(out) {
   const classification = [
-    out.review ? 'Chưa đủ dữ liệu để kết luận' : 'Chưa ghi nhận thuộc nhóm kiểm soát đặc biệt hoặc nhóm có điều kiện',
+    out.conclusionReady ? 'Sản phẩm thông thường' : 'Chưa đủ dữ liệu để kết luận',
     'Hóa chất sản xuất, kinh doanh có điều kiện',
     'Hóa chất cần kiểm soát đặc biệt – Nhóm 2',
     'Hóa chất cần kiểm soát đặc biệt – Nhóm 1'
   ][out.highest];
   const importLicense = out.highest >= 2 ? 'Cần giấy phép nhập khẩu'
     : out.highest===1 ? 'Không yêu cầu theo phạm vi đối chiếu'
-    : out.review ? 'Chưa đủ dữ liệu để kết luận' : 'Không yêu cầu theo phạm vi đối chiếu';
+    : out.conclusionReady ? 'Không yêu cầu theo phạm vi đối chiếu' : 'Chưa đủ dữ liệu để kết luận';
   return {classification,importLicense};
 }
 function renderCustomerReport() {
